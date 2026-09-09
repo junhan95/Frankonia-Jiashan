@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.1 — 2026-09-09
+
+- Replace German imprint and privacy text with Chinese and English notices for the Jiashan website.
+- Describe enquiry-list storage, GitHub Pages logs and email recipients accurately.
+- Preserve unverified details as [ ] and add a company verification checklist.
+
 ## 0.1.0 — 2026-09-09
 
 - Launch the Jiashan website with Simplified Chinese as the default language and English under `/en/`.

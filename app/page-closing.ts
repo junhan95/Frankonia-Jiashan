@@ -62,7 +62,7 @@ export const closingLines = {
     /* The two legal pages. Neither is read for pleasure and both are read for
        one specific thing; the line names that thing. */
     "/imprint": "运营本网站的公司及其责任已公开。",
-    "/privacy": "没有cookie，没有跟踪，没有外部请求——除了您发送给我们的信息之外，我们没有任何信息。",
+    "/privacy": "了解信息如何处理，以及如何行使您的个人信息权利。",
 
     /* Anechoic Chambers — the overview, the four industries, the six chamber
        types, the five technology pages, then one line per model page. */
@@ -150,7 +150,7 @@ export const closingLines = {
     "/myenquiry": "One list, one enquiry — and nothing leaves this browser until you send it.",
 
     "/imprint": "Who operates this site, and who answers for it.",
-    "/privacy": "No cookies, no tracking, no third-party requests — what you send us is all we hold.",
+    "/privacy": "Understand how information is handled and how to exercise your privacy rights.",
 
     "/chambers": "One absorber technology behind every chamber — reached by industry or by chamber type.",
 
