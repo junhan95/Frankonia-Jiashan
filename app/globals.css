@@ -1,0 +1,1908 @@
+/* The typefaces are self-hosted and loaded from app/fonts.ts — see the note
+   there for why they are no longer fetched from fonts.googleapis.com. The two
+   variables below are set on <html> by root-shell.tsx; the literal names stay
+   in the fallback chain so the stack still reads correctly if a variable is
+   ever missing. */
+
+/* Design tokens. The reference surface is the CyberShield product site
+   (www.frankonia-cybershield.com); this file mirrors it so the landing page and
+   every sub-page render in the same format. Spec and the line-by-line
+   derivation: 디자인.md at the repository root.
+
+   Token names are the reference's (`--canvas`, `--body-text`, …). The older
+   names below them are aliases pointing at the same values, kept because the
+   markup ported from the mockup still uses them — never give an alias a value
+   of its own. 임의 변경 금지. */
+:root {
+  /* The CI red, taken from the wordmark itself (public/frankonia-logo.svg is
+     filled #d91920) rather than the pure-channel red this file started with.
+     HQ asked for it in the August review: #e60000 read as too dominant next
+     to the ink, and it sits at 4.35:1 on white — under the AA floor the rest
+     of this palette holds. #d91920 is the same red the group logo and
+     frankonia-solutions.com use, and it clears 5.1:1. 임의 변경 금지. */
+  --primary: #d91920;
+  --primary-dark: #ae1419;
+  /* The Dark Red plate, from the head office's own artwork: "Frankonia Logo -
+     Dark Red.pdf" sets the knot in CMYK 0/100/100/10 where "Frankonia Logo -
+     Red.pdf" sets it in 0/100/100/0. The 10% black is the whole difference,
+     and #c3171d is --primary with that plate applied.
+
+     It is not a hover shade — --primary-dark is that, and it is darker still.
+     This is the CI red for the two places that carry brand red over something
+     other than flat paper: the light-header lockup
+     (public/frankonia-logo-dark.svg) and the hero headline's emphasis word,
+     where a photograph runs behind the type. 6.07:1 on paper against
+     --primary's 5.11, which is the margin those two places need. 임의 변경 금지. */
+  --primary-deep: #c3171d;
+  --ink: #25282b;
+  --canvas: #ffffff;
+  --canvas-soft: #f2f2f2;
+  --paper: #ffffff;
+  --white: #fff;
+  /* Running text on light surfaces. Kept low-contrast on purpose: the gap is
+     what gives headings and CTAs their hierarchy. */
+  --body-text: #7e7e7e;
+  /* On --canvas-soft, --body-text only reaches 3.6:1 — under the 4.5:1 WCAG AA
+     floor — so prose on the soft band uses this instead (7.6:1). */
+  --body-dark: #4a4d50;
+  --muted: #7e7e7e;
+  --mute: #bebebe;
+  --line: #d9d9d9;
+  --steel: #3a3e42;
+  --pill: 60px;
+  --pill-md: 32px;
+  --radius: 6px;
+
+  /* Aliases — same values under the mockup's names. */
+  --red: var(--primary);
+  --red-d: var(--primary-dark);
+  --navy: var(--ink);
+  --sub: var(--body-text);
+  --bg: var(--canvas);
+  --bg2: var(--canvas-soft);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+/* The header is sticky, so an anchor would otherwise land its target
+   underneath it. Keep this above the header height (76px), matching the
+   design reference's own sticky offset (`.cutaway-view { top: 96px }`). */
+#main, .hero[id], section[id], .band[id] { scroll-margin-top: 96px; }
+body {
+  /* `--font-noto-sc` is declared by the Korean root layout and by nothing else
+     — the English pages have no Hangul on them and do not load that face (see
+     app/fonts-kr.ts). The fallback inside the var() is not decoration: an
+     undefined custom property makes the whole declaration invalid at
+     computed-value time, so without it every English page would lose this
+     font stack entirely and render in the browser's default serif. */
+  font-family: var(--font-open-sans), var(--font-noto-sc, "Noto Sans SC"), "Open Sans", "Noto Sans SC", "Helvetica Neue", Arial, sans-serif;
+  color: var(--ink);
+  background: var(--bg);
+  line-height: 1.5;
+}
+img { max-width: 100%; }
+a { text-decoration: none; color: inherit; }
+/* The reference leaves this at the browser default, because the product page it
+   was ported from is written for Latin copy. This site is Korean-first, and
+   keep-all is what stops 한글 단어가 중간에서 잘리는 것 — a deliberate, documented
+   departure. See 디자인.md §언어별 예외. */
+h1, h2, h3, h4, p { word-break: keep-all; }
+/* Chinese has no word spaces. Allow CJK line breaks on narrow screens. */
+html[lang="zh-CN"] :is(h1, h2, h3, h4, p) { word-break: normal; overflow-wrap: anywhere; }
+
+/* Content container. The reference has no wrapper element: every band carries
+   `padding: 120px max(4vw, calc((100% - 1400px) / 2))` itself, which holds a
+   4vw gutter until the viewport passes ~1521px and centres a 1400px column
+   after that. `.wrap` reproduces exactly that, so the landing page, the
+   sub-pages and the CyberShield bands all start on the same vertical line. */
+.wrap { width: 100%; padding-inline: max(4vw, calc((100% - 1400px) / 2)); }
+/* The reference's own chrome sits at a flat 4vw rather than the clamped column
+   (`.cs .site-header`, `.cs footer`), so the lockup stays near the edge on
+   ultra-wide screens. */
+header .wrap, footer .wrap, .mobile-menu .wrap { padding-inline: 4vw; }
+
+/* ===== Header ===== */
+/* Solid paper, not a translucent blur: the bar is an opaque band and depth on
+   this site comes from surface contrast, never from a treatment layered over
+   the content.
+
+   White, where this file started at `--ink`. The August review moved the
+   landing cover to white; the September one asked for the same thing of the
+   chrome — "change the red on dark colour everywhere (footer, header, …),
+   align it more with the existing Frankonia homepage and the light colours.
+   No red on black please." frankonia-solutions.com's own bar is measured at
+   #fff with 16px/400 links in #666 and one red pill, and that is what this is
+   now. The consequence that matters: every red-on-ink pair in this bar — the
+   underline, the panel column heads, the marked pill — becomes red on white,
+   which moves them from 3.08:1 to 5.11:1 and takes four pieces of type from
+   failing AA to passing it. Red as an accent on paper, not as a warning
+   colour on black. */
+header { position: sticky; top: 0; z-index: 100; background: var(--canvas); border-bottom: 1px solid var(--line); }
+/* Three groups on one line: the mark, the menu, then the controls. The bar is
+   76px — the reference's height — so the stacked lockup can sit at 44px and
+   still breathe; the gap between the menu and the language toggle is wider
+   than the gap between menu items, so the controls read as separate from the
+   navigation. */
+.nav { display: flex; align-items: center; gap: 26px; height: 76px; }
+.brand { display: inline-flex; align-items: center; flex: none; }
+.brand-logo { display: block; width: auto; height: 44px; }
+/* The menu holds the same 677px band in both locales, so the bar reads as one
+   design regardless of language. The Korean labels total 362px against the
+   English 557px, so at a plain 24px gap the Korean block came out 195px
+   narrower and sat 110px further right. min-width pins the band to what the
+   English labels need — English is already exactly that wide, so it is
+   untouched — and space-between spreads the spare 195px across the five gaps
+   for Korean (24px → 63px). Auto margins centre whatever is left over; below
+   1240px the bar folds into the drawer rather than compressing further. */
+nav.menu { position: relative; display: flex; gap: 24px; margin: 0 auto; min-width: 677px; justify-content: space-between; }
+/* The reference's nav labels (`.cs .nav-desktop a`): 15px, weight 400, and the
+   underline is a primary rule that wipes in from the left rather than a border
+   that appears all at once. The wipe survives the move to white — it is the
+   bar's signature and red on paper is what the group's own site does.
+   `--body-dark`, not `--body-text`: the site's running grey is 4.06:1 on white
+   and a 15px label may not use it. This is 7.6:1, and near enough the #666 the
+   head office's bar sets its own links in. */
+nav.menu a { position: relative; color: var(--body-dark); font-size: 15px; font-weight: 400; padding: 6px 2px 8px; white-space: nowrap; transition: color .2s; }
+nav.menu a::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: var(--primary); transform: scaleX(0); transform-origin: 0 50%; transition: transform .25s ease; }
+nav.menu a:hover { color: var(--ink); }
+nav.menu a:hover::after { transform: scaleX(1); }
+
+/* Dropdown submenus */
+nav.menu .mi { position: relative; display: flex; align-items: center; }
+nav.menu .mi > a { display: inline-flex; align-items: center; gap: 5px; }
+.caret { font-size: 8px; opacity: .55; transform: translateY(1px); transition: .2s; }
+.mi:hover .caret { opacity: 1; transform: translateY(1px) rotate(180deg); }
+.dropdown { position: absolute; top: 100%; left: 50%; transform: translateX(-50%); padding-top: 16px; display: none; z-index: 120; }
+.mi:hover .dropdown, .mi:focus-within .dropdown { display: block; }
+/* No drop shadow — the reference's own overlay panel (`.cs .language-menu`)
+   separates itself with an ink fill and a 30% white hairline instead. */
+.dd-panel { background: var(--canvas); border: 1px solid var(--line); border-radius: var(--radius); min-width: 216px; padding: 8px 20px; }
+/* Every rule for a link *inside* a panel is prefixed with `nav.menu`, and so
+   is each of their :hover pairs. `nav.menu a` above carries one element
+   selector more than a bare `.dd-panel a` and was quietly taking the padding,
+   the colour and the size off these links: the Company and Contact panels
+   rendered 15px white rows starting 5px from the panel edge rather than 13.5px
+   grey ones at 33px. Prefixing only the base rules would then have let them
+   outrank their own :hover rules and swallow the red edge, hence both. */
+/* The 20px above plus the 10px here put the label 33px in from the panel's
+   left edge — the same axis the mega panel's columns sit on, so the two kinds
+   of panel read as one menu. The 20px is on the panel rather than the link
+   because the hover fill should stop where the column's would. */
+nav.menu .dd-panel a { display: block; padding: 9px 10px; color: var(--body-dark); font-size: 13.5px; font-weight: 400; border-bottom: 0; border-left: 2px solid transparent; }
+nav.menu .dd-panel a:hover { color: var(--ink); border-left-color: var(--red); background: var(--canvas-soft); border-bottom: 0; }
+
+/* Mega panel — the two product branches. Fifteen links in one 216px column
+   would not be scannable, so they are grouped into titled columns of four to
+   six. The panel keeps the single-column panel's ink fill, hairline and hover
+   rule; only the width and the internal grid are new. */
+/* The column count is not fixed here: Chambers takes three, Test Systems two,
+   and `site-header` sets `--dd-cols` from the length of the group list it is
+   already mapping over. A panel wide enough for three with only two in it
+   leaves a column of empty ink, which reads as a broken menu rather than as a
+   short one — and the count is a property of the data, so the data is what
+   states it. 243.33px is one column plus one 10px gap; the +30 is the row's
+   40px of side padding less the gap the last column does not have. */
+/* A 760px panel cannot be centred under its own item without hanging off one
+   edge of the window: Chambers sits too far left, Test Systems too far right.
+   Dropping the item out of the positioning flow hands the panel to nav.menu,
+   which is itself centred in the bar — so both mega panels centre on the menu
+   and neither can overflow. The single-column panels keep centring on their
+   own item, which is right for their width. */
+/* Selector matches `nav.menu .mi` above so it can override its position. */
+nav.menu .mi:has(.dd-panel--mega) { position: static; }
+.dd-panel--mega { --dd-cols: 3; width: calc(var(--dd-cols) * 243.33px + 30px); max-width: calc(100vw - 48px); padding: 20px 0 0; }
+.dd-cols { display: grid; grid-template-columns: repeat(var(--dd-cols), 1fr); gap: 0 10px; padding: 0 20px 16px; }
+/* Same voice as the `.kicker` above every section heading on the site. */
+/* 12px, not the links' 10px: a link spends 2px of its own inset on the
+   transparent border that turns red on hover, so 12 is what puts the heading
+   on the same axis as the labels underneath it. */
+.dd-col h6 { color: var(--ink); font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; padding: 0 12px 8px; }
+nav.menu .dd-panel--mega a { padding: 7px 10px; line-height: 1.35; }
+.dd-note { display: block; color: var(--body-text); font-size: 11.5px; margin-top: 2px; }
+.dd-panel--mega a:hover .dd-note { color: var(--body-dark); }
+/* Utility row: whole-branch links (references, downloads) that belong to no
+   single column and are not already reachable from the bar above. */
+/* 32px so the first utility link starts under the column labels above it and
+   the panel keeps one left edge all the way down; these links carry no padding
+   of their own, so the whole inset is the row's. */
+.dd-utils { display: flex; flex-wrap: wrap; gap: 4px 24px; border-top: 1px solid var(--line); background: var(--canvas-soft); padding: 6px 32px 8px; border-radius: 0 0 var(--radius) var(--radius); }
+nav.menu .dd-utils a { padding: 7px 0; font-size: 13px; border-left: 0; }
+nav.menu .dd-utils a:hover { border-left: 0; background: none; text-decoration: underline; }
+
+/* The one marked entry in the bar — MyChamber (see the note in site-header).
+   An outlined pill, and on ink the label inside it had to stay white: --primary
+   on --ink is 3.08:1, which a 15px regular nav label may not use, so the colour
+   went onto the border where 3:1 is the applicable floor. On paper that
+   constraint is gone — --primary on --canvas is 5.11:1 — so the label takes the
+   colour too and the entry reads as the outlined CTA it always meant to be.
+   Hovering fills the pill: white on red at 4.81:1, the same pair as every other
+   button on this site. Outlined rather than filled so it does not read as a
+   second copy of the red CTA at the end of the bar. */
+nav.menu .mi--hl > a { border: 1px solid var(--primary); border-radius: var(--pill); padding: 6px 15px 7px; color: var(--primary); transition: background .2s, border-color .2s, color .2s; }
+/* The wipe-in underline would run underneath the pill. */
+nav.menu .mi--hl > a::after { display: none; }
+nav.menu .mi--hl > a:hover { background: var(--primary); border-color: var(--primary); color: #fff; }
+
+.lang { display: flex; gap: 2px; background: var(--canvas-soft); border-radius: 6px; padding: 3px; }
+.lang a { color: var(--body-dark); font-size: 12.5px; font-weight: 700; padding: 5px 10px; border-radius: 4px; transition: .15s; }
+.lang a.on { background: var(--red); color: #fff; }
+/* The reference's `.button-small`: same pill as the full-size CTA, one step
+   down in padding and label size. */
+.cta-top {
+  display: inline-flex; align-items: center; justify-content: center; gap: 18px;
+  border: 1px solid var(--primary); background: var(--primary); color: #fff;
+  font-size: 16px; line-height: 24px; font-weight: 400; padding: 9px 20px;
+  border-radius: var(--pill); white-space: nowrap;
+  transition: background .2s, border-color .2s, transform .2s;
+}
+.cta-top:hover { background: var(--primary-dark); border-color: var(--primary-dark); transform: translateY(-2px); }
+
+/* Hamburger — only rendered below the desktop breakpoint, where nav.menu is
+   hidden and the site would otherwise have no navigation at all. */
+.burger { display: none; background: none; border: 0; padding: 8px; margin-left: 4px; cursor: pointer; color: var(--ink); }
+.burger-bars { display: block; width: 22px; height: 16px; position: relative; }
+.burger-bars i { position: absolute; left: 0; width: 100%; height: 2px; background: currentColor; border-radius: 2px; transition: .2s; }
+.burger-bars i:nth-child(1) { top: 0; }
+.burger-bars i:nth-child(2) { top: 7px; }
+.burger-bars i:nth-child(3) { top: 14px; }
+.burger-bars.open i:nth-child(1) { top: 7px; transform: rotate(45deg); }
+.burger-bars.open i:nth-child(2) { opacity: 0; }
+.burger-bars.open i:nth-child(3) { top: 7px; transform: rotate(-45deg); }
+
+/* Mobile drawer. Submenus are laid out flat: there is no hover on touch, so
+   the desktop dropdown would be unreachable. */
+.mobile-menu { display: none; background: var(--canvas); border-top: 1px solid var(--line); max-height: calc(100dvh - 76px); overflow-y: auto; padding: 8px 0 28px; }
+.mobile-menu[hidden] { display: none; }
+.mm-group { border-bottom: 1px solid var(--line); padding: 4px 0 10px; }
+.mm-top { display: block; color: var(--ink); font-size: 16px; font-weight: 700; padding: 14px 2px 8px; }
+/* The drawer's copy of the marked entry. Same pill for the same contrast
+   reason as `.mi--hl`, sized to the drawer's larger type. */
+.mm-top--hl { display: inline-block; border: 1px solid var(--primary); border-radius: var(--pill); padding: 10px 20px; margin: 10px 0 6px; color: var(--primary); }
+.mm-subs { display: flex; flex-wrap: wrap; gap: 6px 18px; padding-bottom: 6px; }
+.mm-subs a { color: var(--body-dark); font-size: 14px; padding: 6px 2px; }
+/* Grouped submenu, collapsed by default — see the note in site-header. Native
+   <details> so it works before hydration and answers the keyboard on its own. */
+.mm-fold { border-top: 1px solid var(--line); }
+.mm-fold summary { list-style: none; cursor: pointer; color: var(--ink); font-size: 12px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; padding: 11px 2px; display: flex; align-items: center; justify-content: space-between; }
+.mm-fold summary::-webkit-details-marker { display: none; }
+.mm-fold summary::after { content: "+"; color: var(--body-text); font-size: 15px; font-weight: 400; opacity: 1; }
+.mm-fold[open] summary::after { content: "−"; }
+.mm-utils { border-top: 1px solid var(--line); padding-top: 8px; margin-top: 2px; }
+.mm-utils a { font-size: 13px; color: var(--body-text); }
+.mm-cta { display: inline-block; margin-top: 22px; }
+/* The drawer's two closing buttons. `.btns` already lays them out and stacks
+   them at 700px; this only stops the second one inheriting the first one's
+   top margin twice over. */
+.mm-foot { margin-top: 4px; }
+
+/* ===== Hero =====
+   White, not ink. The head office's August review asked for one thing this
+   band could not answer by re-tinting: "have the cover of the landing page
+   more aligned with the Frankonia homepage". frankonia-solutions.com opens on
+   white — white bar, dark type, red used once — and an ink cover under it was
+   the single largest way this site did not look like the group's. The same
+   note is where "the red color is very dominant" came from, and both are the
+   same observation: red on black is a warning colour, red on white is an
+   accent.
+
+   Everything below the fold already runs on --canvas. The cover was the last
+   dark band on the landing page, and it is now the same paper as the rest.
+   Sub-page heads stay ink on purpose — see `.page-head` — so a branch page is
+   still recognisably a level down from the cover rather than a copy of it. */
+.hero { position: relative; background: var(--canvas); color: var(--ink); overflow: hidden; }
+/* The photographs fill the band and the paper stays underneath them, so the
+   hero still reads as the same white band it is if an image is slow or
+   missing.
+
+   `.hero-media` earns its place with one declaration: `z-index: 0` opens a
+   stacking context, so the slides' own z-index values order them against each
+   other and nothing else. `.hero::after` — the scrim the headline's contrast
+   depends on — comes later in the DOM at the same level and therefore still
+   paints over the whole stack. Without this wrapper the slides would climb
+   over the scrim and the headline would be set on bare photograph. */
+.hero-media { position: absolute; inset: 0; z-index: 0; }
+/* `object-position` sits above centre on every frame: what is worth seeing is
+   the absorber ceiling and the far corner, and centring would put bare floor
+   behind the headline. The two frames with a subject standing on the turntable
+   are nudged a little lower so the subject is not cropped at the chin. */
+.hero-shot {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  object-fit: cover; object-position: 50% 38%;
+  animation-name: hero-cycle, var(--hero-pan, hero-pan-a);
+  animation-duration: 45s;
+  animation-timing-function: ease-in-out, linear;
+  animation-iteration-count: infinite;
+  animation-delay: var(--hero-in, 0s);
+}
+/* The round is 45s and there are five slides, so each holds the band for 9s —
+   the same nine seconds a slide has always held, with a fifth room added to
+   the rotation rather than the rotation running faster.
+
+   The delays are negative — every slide starts mid-animation — and they are
+   set so the first frame is the one on screen at t=0, five percent in, having
+   just finished its own fade. That keeps the LCP image the image a visitor
+   actually sees, and it means the band is never blank while the round starts.
+
+   Read the delays as positions on the 45s clock: 2.25s, 38.25s, 29.25s,
+   20.25s and 11.25s put the five slides at 5%, 85%, 65%, 45% and 25%, each one
+   turn (20%) behind the last, so they take the band in DOM order from there.
+   All five move if a sixth room is ever added — they are
+   `duration × (5% + turn × n)`, not constants. */
+.hero-media .hero-shot:nth-child(1) { --hero-pan: hero-pan-a; --hero-in: -2.25s; }
+.hero-media .hero-shot:nth-child(2) { --hero-pan: hero-pan-b; --hero-in: -38.25s; object-position: 50% 46%; }
+.hero-media .hero-shot:nth-child(3) { --hero-pan: hero-pan-c; --hero-in: -29.25s; object-position: 50% 42%; }
+.hero-media .hero-shot:nth-child(4) { --hero-pan: hero-pan-d; --hero-in: -20.25s; object-position: 50% 46%; }
+/* The reverberation hall. Framed level rather than above centre like the other
+   four: its subject is the stirrer on the ceiling and the vehicle on the
+   turntable, one above the other, and lifting the crop the way an absorber wall
+   wants would take the top off the stirrer. */
+.hero-media .hero-shot:nth-child(5) { --hero-pan: hero-pan-e; --hero-in: -11.25s; object-position: 50% 52%; }
+/* One slide's turn, now a fifth of the round rather than a quarter.
+   0–4%    fading in, on top      (1.8s)
+   4–20%   held, on top           (7.2s)
+   20–100% waiting underneath, still fully opaque
+
+   The fade is still 1.8s and the hold still 7.2s — the percentages moved
+   because the round got longer, not because the timing changed.
+
+   The z-index steps are what make the hand-over a dissolve rather than a dip
+   through the band. The outgoing slide does not fade at all — it simply drops
+   a level and the incoming one fades in above it, so the band is covered by an
+   opaque photograph at every instant. Cross-fading the pair instead would let
+   the paper show through at 25% in the middle of every transition, which reads
+   as a flash on a light band exactly as it read as a flicker on a dark one. */
+@keyframes hero-cycle {
+  0%     { opacity: 0; z-index: 5; }
+  4%     { opacity: 1; }
+  20%    { opacity: 1; z-index: 5; }
+  20.01% { z-index: 4; }
+  40%    { z-index: 4; }
+  40.01% { z-index: 3; }
+  60%    { z-index: 3; }
+  60.01% { z-index: 2; }
+  80%    { z-index: 2; }
+  80.01% { z-index: 1; }
+  100%   { opacity: 1; z-index: 1; }
+}
+/* The camera move. Each slide pushes in over the 24% of the round that covers
+   its fade-in, its hold and its hand-over, then holds the framing it ended on
+   for the rest of the round — the reset to the wide framing happens at 100%,
+   underneath an opaque slide, where nobody can see it snap.
+
+   24%, where the four-slide round used 30%: both are the slide's own turn plus
+   a little, and the turn went from a quarter of the round to a fifth. The push
+   itself is unchanged at ~14% over 10.8s, which is about a pixel of growth
+   every three frames at 1920 wide — enough that the band is never still, slow
+   enough that it never reads as a zoom. The five differ in direction so
+   consecutive slides do not drift the same way. `overflow: hidden` on `.hero`
+   and a starting scale above 1 keep the edges covered throughout. */
+@keyframes hero-pan-a {
+  0%   { transform: scale(1.03) translate3d(0, 0, 0); }
+  24%  { transform: scale(1.17) translate3d(-1.6%, -1.4%, 0); }
+  100% { transform: scale(1.17) translate3d(-1.6%, -1.4%, 0); }
+}
+@keyframes hero-pan-b {
+  0%   { transform: scale(1.04) translate3d(1.5%, -0.6%, 0); }
+  24%  { transform: scale(1.18) translate3d(-1.2%, 1.2%, 0); }
+  100% { transform: scale(1.18) translate3d(-1.2%, 1.2%, 0); }
+}
+@keyframes hero-pan-c {
+  0%   { transform: scale(1.02) translate3d(-1.5%, 1%, 0); }
+  24%  { transform: scale(1.16) translate3d(1.4%, -1.2%, 0); }
+  100% { transform: scale(1.16) translate3d(1.4%, -1.2%, 0); }
+}
+@keyframes hero-pan-d {
+  0%   { transform: scale(1.05) translate3d(0, -1.2%, 0); }
+  24%  { transform: scale(1.19) translate3d(1.6%, 1%, 0); }
+  100% { transform: scale(1.19) translate3d(1.6%, 1%, 0); }
+}
+@keyframes hero-pan-e {
+  0%   { transform: scale(1.03) translate3d(-1.2%, -1%, 0); }
+  24%  { transform: scale(1.17) translate3d(1.3%, 1.3%, 0); }
+  100% { transform: scale(1.17) translate3d(1.3%, 1.3%, 0); }
+}
+/* The scrim, and the reason it never reaches opacity anywhere.
+
+   Three shapes have stood here. The ink cover ran true ink to 42% and gave the
+   photograph the half of the band with nothing written on it. The white cover
+   that replaced it kept that column and only changed its colour, then narrowed
+   it so the chamber read as a room rather than a strip. Both were the same
+   idea: a panel of flat surface for the copy, a photograph beside it.
+
+   This is not that. There is no opaque run at all — one chamber fills the band
+   edge to edge and the wash over it only ever thins or thickens, so the
+   absorber wall is visible behind the headline as well as beside it. What the
+   cover shows is the room, and half a room framed by a white panel was the
+   product photographed next to itself. It is also what HQ's own white cover
+   does: the pyramid rows carry on faintly behind the type rather than stopping
+   at its edge.
+
+   That costs the guarantee the panel gave for free. Type on flat paper has one
+   contrast ratio; type on a photograph has a different one every nine seconds,
+   as four slides cycle through their own exposures and each pans about 14%
+   across its turn. So the wash is set by the worst pixel any line can land on
+   rather than by how it looks over the frame on screen at t=0 — 90% at the
+   left edge, holding above 78% across the whole copy column, thinning only
+   past it. Measured per element on the rendered band at 1440, against the
+   darkest wash that element's own box lands on across all five slides: eyebrow
+   11.32, headline 9.80, emphasis 4.77, body copy 6.09 — floors of 4.5, 3.0,
+   3.0 and 4.5. The darkest wash any of the copy sits on is 210, not the 190
+   the band reaches elsewhere; nothing is written where the frame goes dark.
+
+   Red is what the stops could not save. #d91920 on paper is only 5.11:1 to
+   begin with, so every point of photograph admitted behind it comes off a
+   margin of 0.61, and reaching the 4.5 a 15px bold label needs would take a
+   background of 240 or lighter — the opaque panel this cover exists to not
+   have. The eyebrow is ink for that reason (`.hero .tag`), and the one piece
+   of red type left is the headline's emphasis word, which is large enough for
+   the 3:1 floor and set in --primary-deep to clear it.
+
+   The photographed page head (`.page-head--photo`) is a different band and
+   keeps its own scrim: it is `--canvas-soft` behind a single still frame with
+   no cycle and no pan, so the panel it is built on costs it nothing. */
+.hero::after {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(100deg,
+    rgba(255, 255, 255, .92) 0%,
+    rgba(255, 255, 255, .88) 30%,
+    rgba(255, 255, 255, .82) 52%,
+    rgba(255, 255, 255, .40) 74%,
+    rgba(255, 255, 255, .12) 100%);
+}
+.page-head--photo::after {
+  --copy-end: min(calc(max(4vw, (100vw - 1400px) / 2) + 780px), 78vw);
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(100deg,
+    var(--canvas-soft) 0,
+    var(--canvas-soft) var(--copy-end),
+    rgba(242, 242, 242, .84) calc(var(--copy-end) + 6vw),
+    rgba(242, 242, 242, .30) calc(var(--copy-end) + 16vw),
+    rgba(242, 242, 242, .06) 100%);
+}
+/* Both bands sit above the image and the scrim. `.hero-in` already carries
+   position: relative for its own reasons; this only adds the order. */
+.hero-in, .hero-stats { z-index: 1; }
+.hero-stats { position: relative; }
+/* `.hero-in` is the container itself (`class="wrap hero-in"`), so the copy
+   column is capped on the children — a max-width here would fight the
+   container's own padding-inline and collapse the band on wide screens.
+
+   68/76, down from 110/120. The ink cover needed that much air: the band was
+   a flat dark field and the padding was the only thing giving the headline
+   somewhere to sit. Now the field is a photograph, and the same measure reads
+   as two empty strips of chamber wall above and below the copy — the room is
+   in the frame but nothing is happening in the top 110px of it. The asymmetry
+   stays (the foot carries a little more than the head, so the copy sits above
+   the optical centre rather than in it), it is just smaller. */
+.hero-in { position: relative; padding-block: 68px 76px; }
+/* The reference's `.eyebrow`: 15px ExtraBold uppercase in primary, 22px clear
+   of the headline. Every red label above a heading on this site is this, and
+   the cover is one of them again.
+
+   It was not, for one release. On ink the red eyebrow was the only type on the
+   site that failed AA — 3.08:1, where 15px bold needs 4.5 — so it was carried
+   at 19px to cross the large-text threshold, then dropped to white altogether
+   when HQ read the cover as "red is very dominant". Both of those were
+   workarounds for the ink behind it.
+
+   This is a third answer, and it is the photograph's doing rather than the
+   ink's. Brand red is 5.11:1 on paper — it clears AA, but only by 0.61, and
+   the moment a chamber wall shows through the wash instead of flat white the
+   margin is gone: over the darkest pixel the copy column lands on, #d91920
+   measures 2.75 and #c3171d 3.19, against the 4.5 a 15px bold label needs.
+   There is no wash that fixes it either — red needs a background of 240 or
+   lighter to reach 4.5, which is the opaque panel this cover deliberately does
+   not have.
+
+   So the eyebrow is ink, and reads at 7.97 over that same worst pixel. Red is
+   still in the first screen twice: the name inside the headline, which is
+   large enough for the 3:1 floor and set in --primary-deep to clear it, and
+   the primary CTA, which carries its own fill and is unaffected by anything
+   behind it. Two accents rather than three, which is also closer to what HQ
+   asked for than three was. */
+.hero .tag { display: inline-block; color: var(--ink); font-size: 15px; line-height: 1.5; font-weight: 800; letter-spacing: .01em; text-transform: uppercase; margin-bottom: 22px; }
+/* `.cs h1` — the one place on a page that shouts.
+
+   720px and 54px, where the ink cover set 900 and 66. The cap no longer has a
+   scrim edge to stay behind — the photograph runs under the whole band now —
+   but it still decides how much of the chamber the copy stands in front of,
+   and three lines of 66px reached 805px and walked the headline across the
+   room. At 54px the longest English line ("FRANKONIA AT YOUR SIDE") sets 702px
+   and the wrap is unchanged: three lines either way, only the scale moves.
+
+   It is also what keeps the wash honest. `.hero::after` holds above 78% for
+   exactly as far as the copy runs and thins past it, so a wider column would
+   mean a heavier wash over more of the frame — the type would be reading on
+   glass across two-thirds of the band instead of half of it.
+
+   The Korean ceiling is untouched at 52px. Hangul sets far shorter than the
+   English at the same measure ("FRANKONIA가 함께합니다" is 616px at 52) and was
+   never what held the column open, so it keeps the size it had. */
+.hero h1 { max-width: 720px; font-size: clamp(38px, 3.75vw, 54px); line-height: 1.04; font-weight: 800; text-transform: uppercase; letter-spacing: -1px; margin-bottom: 26px; word-break: keep-all; }
+/* 한글은 66px/-1px에서 자형이 무너진다 — 스케일과 자간만 완화하고 굵기·대문자 규칙은 그대로 둔다. */
+html[lang="zh-CN"] .hero h1 { font-size: clamp(32px, 3.4vw, 52px); line-height: 1.12; letter-spacing: -.5px; }
+/* --primary-deep, not --primary: 54px ExtraBold is large text, so the floor is
+   3:1, and over the darkest wash in the copy column brand red measures 2.75
+   while the Dark Red plate measures 3.19. The word is also the company name
+   sitting a few centimetres under the same name in the bar, where the lockup
+   is set in this exact red — they were two reds before, and are one now. */
+.hero h1 em { font-style: normal; color: var(--primary-deep); }
+/* `.cs .hero-body`. --body-dark, not --body-text: at 20px regular the lighter
+   grey is 4.06:1 on paper and 20px is not large text. */
+.hero p { font-size: 20px; line-height: 1.5; color: var(--body-dark); margin-bottom: 38px; max-width: 520px; }
+.btns { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+/* `.cs .button` / `.cs .text-link`: one pill geometry, two fills. The label
+   stays weight 400 — the shape is already the emphasis. */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 18px;
+  padding: 12px 26px; border: 1px solid transparent; border-radius: var(--pill);
+  font-size: 18px; line-height: 28px; font-weight: 400;
+  transition: background .2s, color .2s, border-color .2s, transform .2s;
+}
+.btn-red { background: var(--primary); border-color: var(--primary); color: #fff; }
+.btn-red:hover { background: var(--primary-dark); border-color: var(--primary-dark); }
+/* Nothing renders this as of the September round: the hero, the page heads and
+   the contact band are all paper now, and the two places that carried it pass
+   `.btn-outline` instead. It stays because `.sec-dark` — the ink data band in
+   the polarity ladder — is still part of the system, and this is the pill it
+   would take. */
+.btn-ghost { border-color: #fff; color: #fff; }
+.btn-ghost:hover { background: #fff; color: var(--ink); }
+/* `.btn-ghost` is the outline for dark bands — its border is white, which
+   disappears on canvas. This is the same pill on a light surface. */
+.btn-outline { background: var(--canvas); border-color: var(--mute); color: var(--ink); }
+.btn-outline:hover { border-color: var(--primary); color: var(--primary); }
+.btn:hover { transform: translateY(-2px); }
+/* The pill was written for anchors; MyChamber puts it on real buttons, which
+   bring their own font and cursor. */
+button.btn { font-family: inherit; cursor: pointer; }
+button.btn:disabled { opacity: .45; cursor: not-allowed; }
+button.btn:disabled:hover { transform: none; background: var(--primary); border-color: var(--primary); }
+/* Trailing ↗ ↓ → glyphs lean out of the pill on hover. */
+.btn span { transition: transform .25s ease; }
+.btn:hover span { transform: translate(3px, -3px); }
+/* `.cs .metrics`: left-aligned, quartered by hairlines — `--line`, the same
+   rule every other divider on a light surface uses, where the ink cover drew
+   them at 20% white. */
+/* Opaque, where the ink band let the photograph run on behind it. A hairline
+   grid needs a field to be drawn on: over the bright end of a chamber shot the
+   dividers vanish and the last cell's caption is set on absorber pyramids. The
+   photograph now ends where the band begins, which is also where HQ's white
+   cover ends it. */
+.hero-stats { position: relative; display: flex; gap: 0; background: var(--canvas); border-top: 1px solid var(--line); }
+.hero-stats .st { flex: 1; padding: 26px 28px 32px; text-align: left; border-right: 1px solid var(--line); transition: background .25s ease; }
+/* The reference insets the first cell's text by the same 28px as the rest, so
+   the band reads as four equal cells rather than as a continuation of the
+   headline's left edge — measured on `.cs .metrics div`. */
+.hero-stats .st:last-child { border-right: 0; }
+.hero-stats .st:hover { background: var(--canvas-soft); }
+/* The figure and its mark share a line; the caption sits under both.
+   The four glyphs are the one thing on this band that is not carried over from
+   the ink cover, and they are here because HQ's white cover has them. On ink
+   the numbers had a dark field to sit in and needed nothing else to read as a
+   band; on paper the four cells are hairlines on white, and the marks are what
+   stops them from reading as an unstyled table. They are the site's own icon
+   grammar — 1.6px stroke, no fill, round joins, as `.chk` and `.hl-caret`. */
+.hero-stats .st-top { display: flex; align-items: center; gap: 11px; }
+.hero-stats .st-ico { flex: none; width: 21px; height: 21px; fill: none; stroke: var(--primary); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.hero-stats b { display: block; font-size: 24px; font-weight: 800; letter-spacing: -.02em; color: var(--ink); }
+.hero-stats span { display: block; margin-top: 8px; font-size: 14px; line-height: 1.45; color: var(--body-dark); letter-spacing: 0; }
+
+/* ===== Sub-page head =====
+   The landing hero at a third of the height. The heading is Light where the
+   landing's is ExtraBold uppercase, so a sub-page is recognisably the same site
+   without competing with the home page (design ref §4.2-1).
+
+   Paper, where this was ink. The August round moved the cover to white and left
+   this band dark on purpose — "so a branch page is still recognisably a level
+   down from the cover". With the bar above it now white too, that reading no
+   longer holds: an ink strip between a white header and white content stopped
+   being a level and started being a stripe. The September review asked for the
+   light colours everywhere, and this is the last band above the fold that was
+   not. The 19px eyebrow goes back to the site's own 15px `.kicker` at the same
+   time — it was oversized only to clear 3:1 against ink, and on paper the same
+   red measures 5.11:1 at any size. */
+.page-head { background: var(--canvas-soft); color: var(--ink); padding: 96px 0 76px; border-bottom: 1px solid var(--line); }
+.page-head .tag { display: inline-block; color: var(--primary); font-size: 15px; line-height: 1.5; font-weight: 800; letter-spacing: .01em; text-transform: uppercase; margin-bottom: 22px; }
+/* Same display voice as a section heading — the reference's own long-form head
+   (`.cs .legal-body h1`) uses exactly this rather than the hero's ExtraBold. */
+/* 780px, not 900: on the photographed variant below, that is where the opaque
+   run of the scrim ends — the same cap and the same reason as `.hero h1`. */
+.page-head h1 { font-size: clamp(34px, 3.6vw, 48px); font-weight: 300; line-height: 1.1; letter-spacing: 0; margin-bottom: 26px; max-width: 780px; }
+/* `--body-dark`, not the running `--body-text`: this paragraph sits on
+   `--canvas-soft`, where the lighter grey is 3.6:1. */
+.page-head p { color: var(--body-dark); font-size: 18px; line-height: 1.55; max-width: 680px; }
+
+/* The photographed variant, carried by the first page of each nav branch.
+   Background only: the padding above is untouched, so a head with a photograph
+   is exactly as tall as one without and the two read as the same band.
+
+   No animation, deliberately. The landing hero cycles four frames and pans each
+   one because it is the thing a visitor arrives at; a page head is passed
+   through on the way to the page, and a camera move on every sub-page would be
+   motion nobody asked for. There is nothing here for the reduced-motion block
+   further down to switch off.
+
+   `.page-head-media` exists for the same reason `.hero-media` does: `z-index: 0`
+   opens a stacking context, so the frame cannot climb over `::after` and take
+   the red eyebrow's contrast down with it. */
+.page-head--photo { position: relative; overflow: hidden; }
+.page-head-media { position: absolute; inset: 0; z-index: 0; }
+/* The band is a third of the hero's height against photographs framed for a
+   page, so `cover` throws away most of the vertical — which is why every caller
+   passes an `object-position` rather than leaving the crop on the floor. */
+.page-head-shot { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% 45%; }
+.page-head--photo .wrap { position: relative; z-index: 1; }
+
+/* Callout — the reference's `.why-value`: soft canvas, 3px primary rule down
+   the left edge, card radius. */
+.callout { border-left: 3px solid var(--primary); background: var(--canvas-soft); border-radius: var(--radius); padding: 40px 44px; margin-top: 44px; color: var(--body-dark); font-size: 15.5px; line-height: 1.7; max-width: 880px; }
+.alt .callout { background: var(--canvas); }
+/* The check list's closing statement. No fill and no rule of its own: it
+   continues the list it follows, one step up in size and in the ink rather
+   than the body grey, so it reads as the conclusion of the ticks above rather
+   than as a separate object sitting beside them. */
+.callout--close { max-width: 900px; border-left: 0; border-radius: 0; background: none; padding: 0; margin-top: 26px; color: var(--ink); font-size: 17px; line-height: 1.65; }
+.alt .callout--close { background: none; }
+
+/* The old `/mycart` address, which is now a page whose whole job is to leave.
+   One paragraph and the way out; nobody should be here long enough for it to
+   need a layout. See cart-redirect.tsx. */
+.redirect-note { padding: 96px 0 120px; }
+.redirect-note p { color: var(--body-dark); font-size: 17px; line-height: 1.6; max-width: 560px; margin-bottom: 26px; }
+
+/* Empty state — for lists that are real but not yet populated, so the page
+   reads as deliberately empty rather than broken. */
+.empty { border: 1px solid var(--mute); border-radius: var(--radius); background: var(--canvas); padding: 44px 32px; text-align: center; max-width: 680px; margin: 0 auto; }
+.empty h4 { font-size: 20px; font-weight: 700; margin-bottom: 10px; }
+.empty p { color: var(--body-dark); font-size: 15px; line-height: 1.6; margin-bottom: 26px; }
+/* Also used as a real <button> by the MyChamber summary, so it carries the
+   reset a button needs; both declarations are inert on an anchor. */
+.hl-action { display: inline-block; margin-left: 14px; padding: 0; background: none; border: 0; font-family: inherit; color: var(--primary); font-weight: 700; font-size: 13px; white-space: nowrap; cursor: pointer; }
+.hl-action:hover { text-decoration: underline; }
+
+/* ===== Sections ===== */
+section { padding: 120px 0; }
+/* `.section-heading` in the design reference: left-aligned, 900px, 64px of air
+   before the content.
+   The reference never centres a heading — the left edge is the spine every
+   band, table and card grid on the page is hung from. */
+.sec-head { text-align: left; max-width: 900px; margin: 0 0 64px; }
+.sec-head .kicker { display: inline-block; color: var(--primary); font-size: 15px; line-height: 1.5; font-weight: 800; letter-spacing: .01em; text-transform: uppercase; margin-bottom: 22px; }
+.sec-head h2 { font-size: clamp(34px, 3.6vw, 48px); font-weight: 300; line-height: 1.1; letter-spacing: 0; margin-bottom: 26px; }
+.sec-head p { color: var(--body-text); font-size: 18px; line-height: 1.6; max-width: 680px; }
+/* On the ink and red bands the lead flips to a white tint, as it does in the
+   reference (`.cs .section-heading > p:last-child`). */
+.sec-dark .sec-head p { color: rgba(255, 255, 255, .65); }
+/* On --canvas-soft, --body-text drops to 3.6:1. */
+.alt .sec-head p { color: var(--body-dark); }
+
+/* Solution cards */
+/* Tier cards. The reference's `.ecosystem-grid article` / `.scenario-grid
+   article`: soft-canvas fill, 1px --mute hairline, 6px radius, and on hover the
+   hairline turns primary and the card lifts 4px. No drop shadow anywhere —
+   depth on this site is surface contrast, never a shadow. */
+.sol-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.sol { position: relative; border: 1px solid var(--mute); border-radius: var(--radius); overflow: hidden; background: var(--canvas-soft); display: flex; flex-direction: column; transition: border-color .25s ease, background .25s ease, transform .3s cubic-bezier(.22, .61, .36, 1); }
+.sol:hover { border-color: var(--primary); background: var(--canvas); transform: translateY(-4px); }
+.sol h3 { transition: color .25s ease; }
+.sol:hover h3 { color: var(--primary); }
+.alt .sol { background: var(--canvas); }
+.alt .sol:hover { background: var(--canvas-soft); }
+/* The card's picture band. It carried a line icon on a flat colour tile until
+   the branches had photographs of their own; now it shows the thing itself,
+   the way the chamber and test-system rows below already do. The band is a
+   fixed height rather than an aspect ratio because the three cards sit in one
+   row and their bodies are what should decide the row's height — a ratio would
+   make the pictures grow with the column and push the copy down with them.
+   Fitting follows `.lc-shot`: photographs fill the band, product renders are
+   drawings on white with their own margins and are fitted whole against that
+   same white. */
+.sol .thumb { height: 200px; position: relative; overflow: hidden; background: var(--ink); }
+.sol .thumb img { display: block; width: 100%; height: 100%; }
+/* Scoped to `.sol` so they outweigh the two-class base rule above — otherwise
+   the ink fill wins on specificity and shows through the render's letterbox. */
+.sol .thumb--photo img { object-fit: cover; }
+.sol .thumb--render { background: #fff; }
+.sol .thumb--render img { object-fit: contain; }
+.sol .body { padding: 22px 26px 26px; flex: 1; display: flex; flex-direction: column; }
+.sol h3 { font-size: 20px; font-weight: 700; line-height: 1.25; margin: 0 0 12px; }
+.sol h3 .sub-label { color: var(--body-dark); font-weight: 500; font-size: 14px; }
+.sol p { font-size: 15px; line-height: 1.6; color: var(--body-dark); margin-bottom: 18px; flex: 1; }
+.sol ul { list-style: none; margin-bottom: 22px; }
+.sol li { font-size: 14px; padding: 6px 0 6px 22px; border-bottom: 1px solid var(--line); position: relative; color: var(--body-dark); }
+.sol li:last-child { border-bottom: 0; }
+.sol li::before { content: "›"; position: absolute; left: 6px; color: var(--primary); font-weight: 800; }
+/* `.cs .ecosystem-note a`: hairline underline that turns primary on hover. */
+/* Shared by the solution cards and by the CyberShield band's closing link, so
+   the rules are not scoped to `.sol`. `align-self` is inert outside a flex
+   parent, which is what the band gives it. */
+.go { align-self: flex-start; display: inline-flex; align-items: baseline; gap: 9px; padding-bottom: 3px; border-bottom: 1px solid var(--mute); font-size: 14px; font-weight: 700; color: var(--ink); transition: border-color .25s ease, color .25s ease; }
+.go:hover { border-bottom-color: var(--primary); color: var(--primary); }
+.go span { transition: transform .25s ease; }
+.go:hover span { transform: translate(3px, -3px); }
+/* The card is the link. `.sol` already lifted and turned its heading red on
+   hover, which is a promise of a click, but only the two words of the "read
+   more" link took one — the picture, the heading and the copy above it were
+   all dead. The chamber and test-system rows below solved this by making the
+   whole card an <a>; these cards cannot, because the "read more" link is
+   inside them and an anchor may not nest.
+
+   So the link stretches instead: an empty pseudo-element pinned to the card's
+   padding box. One real link, no nested anchors, and the accessible name still
+   comes from the link's own text. `.sol` is already `position: relative`, so
+   that is what the inset resolves against.
+
+   Paint order is why the picture is clickable too. `.thumb` is positioned and
+   comes first in the DOM; this overlay is positioned and comes last, so it
+   paints over the picture rather than under it. */
+.sol .go--card::after { content: ""; position: absolute; inset: 0; }
+/* The ring belongs on what Enter actually activates. Left on the link itself
+   it would draw a 2px outline around "자세히 보기" while the target is the
+   whole card — pointing at the wrong thing. */
+.sol:has(.go--card:focus-visible) { outline: 2px solid var(--red); outline-offset: 3px; }
+.sol .go--card:focus-visible { outline: none; }
+
+/* Closing link under a full-width card grid rather than inside a card. */
+.sec-go { margin-top: 36px; }
+/* MyChamber's "start again" is the same hairline link on a <button>. */
+button.go { background: none; border: 0; border-bottom: 1px solid var(--mute); font-family: inherit; cursor: pointer; }
+
+/* Lineup cards */
+.alt { background: var(--bg2); }
+.line-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+.line-grid.three { grid-template-columns: repeat(3, 1fr); }
+/* Two across, for the CyberShield page's home-security pair: two items in
+   the four-column default sit beside two empty columns. */
+.line-grid.two { grid-template-columns: repeat(2, 1fr); }
+/* `display: block` because the chamber and test-system cards are anchors now:
+   an inline <a> would not take the padding or fill its grid cell. The hover
+   state below was always written as though the card were clickable — it lifts
+   and turns its heading red — so nothing else changes. */
+.lc { display: block; background: var(--canvas-soft); border: 1px solid var(--mute); border-radius: var(--radius); padding: 26px 26px 30px; transition: border-color .25s ease, background .25s ease, transform .3s cubic-bezier(.22, .61, .36, 1); }
+.lc:hover { border-color: var(--primary); background: var(--canvas); transform: translateY(-4px); }
+/* The shared focus ring below squares corners to 2px, which is right for an
+   inline link and wrong for a card — the card would visibly un-round the
+   moment it took keyboard focus. Cards keep their own radius. */
+.lc:focus-visible { border-radius: var(--radius); }
+.alt .lc { background: var(--canvas); }
+.alt .lc:hover { background: var(--canvas-soft); }
+.lc { min-width: 0; overflow-wrap: anywhere; }
+.lc h4 { transition: color .25s ease; }
+.lc:hover h4 { color: var(--primary); }
+/* The chamber cards' picture band. One ratio for all six regardless of what
+   the source image is — the renders are square-ish and the photographs 3:2, so
+   without this the row would step up and down. Negative margins pull it out to
+   the card edge against the 26px padding; only the top corners round, because
+   the bottom of the band is an interior edge. */
+.lc-shot { position: relative; aspect-ratio: 3 / 2; margin: -26px -26px 18px; border-radius: var(--radius) var(--radius) 0 0; overflow: hidden; }
+.lc-shot img { display: block; width: 100%; height: 100%; }
+/* Photographs fill the frame. Renders are drawings on white with their own
+   margins, so they are fitted whole against that same white — cropping one to
+   3:2 would take the roof off the chamber. */
+.lc-shot--photo img { object-fit: cover; }
+.lc-shot--render { background: #fff; }
+.lc-shot--render img { object-fit: contain; }
+/* The test-system cards. Their pictures are instrument cut-outs on white,
+   nothing like a chamber photograph: the aspect ratios run from a 360×595
+   field probe to a 1600×669 switching unit, so they are fitted whole on the
+   same white ground and given room to breathe — cropping to 3:2 would take the
+   horn off an antenna. The inset is what makes the row read as one shelf of
+   instruments rather than six differently-scaled photographs. */
+.lc-shot--plate { background: #fff; padding: 16px 20px; }
+.lc-shot--plate img { object-fit: contain; }
+/* The icon tile these three rules drew is gone with the Others card: every card
+   in every line-grid on the site now carries a photograph, and the fallback had
+   no card left to fall back to. */
+.lc h4 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+.lc p { font-size: 15px; line-height: 1.55; color: var(--body-dark); }
+.lc .models { margin-top: 12px; font-size: 13px; color: var(--mute); letter-spacing: .3px; }
+
+/* Download cards — a PDF cover, the document's title, and the whole card is
+   the link. Built on `.lc`'s grammar (soft ground, hairline border, lift and
+   red heading on hover) rather than beside it, because a reader arriving from
+   the chamber index should not have to learn a second kind of card; what
+   differs is what the picture is and the meta line under the copy. */
+.dl-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+.dl { display: flex; flex-direction: column; background: var(--canvas-soft); border: 1px solid var(--mute); border-radius: var(--radius); padding: 22px 22px 26px; transition: border-color .25s ease, background .25s ease, transform .3s cubic-bezier(.22, .61, .36, 1); }
+.dl:hover { border-color: var(--primary); background: var(--canvas); transform: translateY(-4px); }
+.dl:focus-visible { border-radius: var(--radius); }
+.alt .dl { background: var(--canvas); }
+.alt .dl:hover { background: var(--canvas-soft); }
+/* One height for fifteen covers of four different shapes — A4 portrait, the
+   square photobook, the near-square service brochure and the two 612×859
+   catalogues. Fixed height with `contain` is what makes them read as one shelf
+   of documents; a fixed *ratio* would crop the title off the A4 ones or letter-
+   box the square one against the card's own ground. White, because that is the
+   paper the covers are printed on and anything else would show as a border
+   around three of them and not the rest. */
+.dl-shot { position: relative; height: 250px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; background: #fff; border: 1px solid var(--line); border-radius: 2px; overflow: hidden; }
+.dl-shot img { max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain; }
+/* EN / DE, on the four documents that exist in both. The badge is the only
+   thing that separates two otherwise identical cards, so it sits on the cover
+   rather than in the meta line where it would be the fourth item in a row of
+   greys. */
+.dl-lang { position: absolute; top: 0; right: 0; padding: 4px 9px; background: var(--ink); color: var(--white); font-size: 11px; font-weight: 800; letter-spacing: .6px; }
+.dl:hover .dl-lang { background: var(--primary); }
+/* `flex: 1` so the meta line sits on the card's floor whatever the blurb runs
+   to — four cards in a row whose format-and-weight lines are at four different
+   heights is the row that made this a flex column rather than a block. */
+.dl-body { display: flex; flex-direction: column; flex: 1; }
+.dl h4 { font-size: 17px; font-weight: 700; line-height: 1.4; margin-bottom: 9px; transition: color .25s ease; }
+.dl:hover h4 { color: var(--primary); }
+.dl p { font-size: 14px; line-height: 1.55; color: var(--body-dark); }
+/* What a reader on a metered connection is actually deciding on. Separated by
+   a hairline rather than by punctuation, the way `.hl-contact` splits its
+   pair. `tabular-nums` so "16.3 MB" and "1.7 MB" line up down the column. */
+.dl-meta { margin-top: auto; padding-top: 16px; display: flex; flex-wrap: wrap; align-items: center; gap: 0 10px; font-size: 12.5px; font-variant-numeric: tabular-nums; letter-spacing: .3px; color: var(--muted); }
+.dl-meta span + span::before { content: ""; display: inline-block; width: 1px; height: 10px; margin-right: 10px; background: var(--line); vertical-align: -1px; }
+/* The one item in the meta line that is not a measurement: it says the click
+   leaves this site. Ink rather than grey, because it is the thing a reader
+   might not expect and the rest of the line is what they already assumed.
+
+   On its own row, and with the hairline taken back off. Four items do not fit
+   one line in a 275px card, so it was wrapping anyway — and a wrapped item
+   carries its separator with it, which put a stray rule at the start of the
+   second line. Breaking it deliberately fixes that and reads better besides:
+   the first row is the file, the second is where the file is. */
+.dl-offsite { flex-basis: 100%; margin-top: 5px; color: var(--body-dark); font-weight: 700; }
+.dl-meta span + span.dl-offsite::before { content: none; }
+
+/* Numbered columns — the reference's `.asset-grid` / `.threat-grid`: a rule
+   across the top of the row, a primary index, then the copy. The red rule
+   grows across the card's top edge on hover. */
+.num-col { position: relative; border-top: 1px solid var(--line); padding-top: 24px; transition: background .25s ease; }
+.num-col::before { content: ""; position: absolute; top: -1px; left: 0; right: 0; height: 2px; background: var(--primary); transform: scaleX(0); transform-origin: 0 50%; transition: transform .3s cubic-bezier(.22, .61, .36, 1); }
+.num-col:hover::before { transform: scaleX(1); }
+.num-col .num { color: var(--primary); font-size: 13px; font-weight: 800; letter-spacing: .5px; }
+.num-col h4 { font-size: 24px; font-weight: 700; margin: 40px 0 14px; transition: color .25s ease; }
+.num-col:hover h4 { color: var(--primary); }
+.num-col p { font-size: 15px; line-height: 1.6; color: var(--body-dark); }
+
+/* Hairline list — the reference's `.feature-list` / `.step-list`: hairline per
+   row, and the row shifts toward the reader on hover. */
+.hairline-list { max-width: 900px; margin: 0; border-top: 1px solid var(--ink); }
+.hl-row { display: flex; align-items: baseline; gap: 16px; padding: 22px 4px; border-bottom: 1px solid var(--line); transition: padding-left .25s ease, background .25s ease; }
+.hl-row:hover { padding-left: 12px; background: var(--canvas-soft); }
+.alt .hl-row:hover { background: var(--canvas); }
+.hl-row .hl-idx { color: var(--primary); font-size: 13px; font-weight: 800; min-width: 30px; }
+.hl-row b { font-size: 18px; font-weight: 700; white-space: nowrap; transition: color .25s ease; }
+/* Registered company names are long: "Frankonia Germany EMC Solutions GmbH"
+   measures 362px at the row's 18px bold, against the 345px of content a 375px
+   viewport leaves after its 4vw gutters — nowrap put nine pixels of the site
+   off the right edge. The rule stays everywhere else, where this cell holds a
+   short label ("주소", a model designation) that should never break; the
+   contact page's office rows opt out. */
+.hl-row--name b { white-space: normal; }
+.hl-row:hover b { color: var(--primary); }
+.hl-row .hl-desc { color: var(--body-text); font-size: 15px; line-height: 1.55; margin-left: auto; text-align: right; }
+/* Catalogue figures under the descriptor: a size and a frequency range, each
+   on its own line so neither wraps into the other. Smaller and lighter than
+   the descriptor because it answers a second question — the reader who is
+   still choosing a category is served by the line above, and the one who has
+   chosen reads this. Tabular numerals keep the digit columns from jittering
+   between rows. */
+/* The contact page's office rows carry a mail address and a number under the
+   postal one. `.hl-spec` below is the line that would normally take them, and
+   it is the one line on the row a reader is meant to click — but it is --mute
+   on canvas (1.9:1) and --body-text on the soft band (3.6:1), neither of which
+   clears AA. So these inherit the descriptor's own colour and take only the
+   break and the spacing from here. Tabular numerals for the same reason the
+   spec line uses them: five numbers stacked in a column should not jitter. */
+.hl-contact { display: block; margin-top: 6px; font-variant-numeric: tabular-nums; }
+.hl-contact a { border-bottom: 1px solid var(--line); transition: color .25s ease, border-color .25s ease; }
+.hl-contact a:hover { color: var(--primary); border-bottom-color: var(--primary); }
+.hl-contact .sep { padding: 0 9px; color: var(--mute); }
+.hl-spec { display: block; margin-top: 6px; color: var(--mute); font-size: 13px; line-height: 1.5; font-variant-numeric: tabular-nums; }
+.hl-spec span { display: block; }
+.alt .hl-spec { color: var(--body-text); }
+.alt .hl-row .hl-desc { color: var(--body-dark); }
+/* Model rows: the descriptor sits under the designation, left-aligned, rather
+   than pushed to the right edge of the row. HQ read the right-aligned version
+   as "too many different formats on one small area" — the row was running an
+   index, a bold designation, a right-aligned sentence and a right-aligned
+   figure strip across one line. This is the layout the row already used below
+   700px; it now holds at every width. The contact page's office rows keep the
+   two-column reading, which is what an address list wants. */
+.hairline-list--models .hl-row { flex-wrap: wrap; }
+.hairline-list--models .hl-row .hl-desc { flex-basis: 100%; margin-left: 46px; margin-top: 6px; text-align: left; }
+.cs-note { color: var(--body-dark); font-size: 14px; margin-top: 30px; }
+@media (max-width: 700px) {
+  .hl-row { flex-wrap: wrap; }
+  .hl-row .hl-desc { margin-left: 46px; text-align: left; flex-basis: 100%; }
+}
+
+/* A hairline row that opens — the chamber model lists.
+   The row keeps every measurement `.hl-row` already sets, so an opening list
+   and a plain one line up on the same page. What changes is the element: a
+   button brings a font, a cursor, a background and four borders of its own, and
+   all of them have to go back. The hairline goes with them, onto the wrapper —
+   otherwise the rule that separates two models would be sitting between a model
+   and its own panel. */
+.hl-item { border-bottom: 1px solid var(--line); }
+.hl-row--toggle {
+  width: 100%; border: 0; background: none; color: inherit; font: inherit;
+  text-align: left; cursor: pointer;
+  /* Room at the right end for the caret, which is positioned rather than laid
+     out: at 700px the row wraps and a flex item would drop to a third line. */
+  position: relative; padding-right: 34px;
+}
+.hl-row--toggle[aria-expanded="true"] b { color: var(--primary); }
+.hl-caret {
+  position: absolute; right: 6px; top: 27px; width: 16px; height: 16px;
+  fill: none; stroke: var(--mute); stroke-width: 1.6;
+  stroke-linecap: round; stroke-linejoin: round;
+  transition: transform .3s ease, stroke .25s ease;
+}
+.hl-row--toggle:hover .hl-caret { stroke: var(--primary); }
+.hl-row--toggle[aria-expanded="true"] .hl-caret { transform: rotate(180deg); stroke: var(--primary); }
+
+/* The fold. A grid row going 0fr → 1fr animates to the panel's own height
+   without anyone measuring it, which is the whole reason the panel is a grid
+   and not a max-height guess: the plates are four different ratios and the
+   summary strips run four to six pairs. `min-height: 0` on the clipping child
+   because a grid item's automatic minimum is its content, and without it the
+   row never actually reaches zero. */
+.hl-panel { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .38s cubic-bezier(.22, .61, .36, 1); }
+.hl-panel.is-open { grid-template-rows: 1fr; }
+.hl-panel-clip { overflow: hidden; min-height: 0; }
+/* Plate left, figures right. `pointer` on the body because the body closes it —
+   the reader opened the row by clicking, and clicking is how it goes away. */
+.hl-panel-body {
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+  gap: 30px; align-items: start; padding: 4px 4px 34px; cursor: pointer;
+}
+/* The gallery. The box holds the first frame's ratio from the first frame of
+   the fold, so the panel does not grow again under the reader when a
+   photograph arrives — and stepping through frames of different shapes moves
+   nothing either. White rather than the band's fill: half these frames are the
+   head office's own sectioned renders, which are cut out on white, and a grey
+   box behind them would draw a rectangle around the drawing. `contain`, so a
+   3:2 photograph in a 1:1 box is letterboxed rather than cropped — the point
+   of the second picture is the thing at its edge. */
+.hl-shot { position: relative; margin: 0; overflow: hidden; border-radius: var(--radius); background: #fff; }
+.hl-frame { display: block; width: 100%; height: 100%; padding: 0; border: 0; background: none; cursor: pointer; }
+.hl-shot img { display: block; width: 100%; height: 100%; object-fit: contain; }
+/* Chamber galleries: one 3:2 box on every model, filled. The head office's
+   frames run 3:2, 1:1, 2:1 and two portraits, and `contain` in a box sized to
+   the first of them left white bars around the others — which is what HQ
+   flagged in the August review. A photograph of a room has no edge that has to
+   survive the crop, so these fill instead. The cutout case below keeps
+   `contain`: an instrument on white is the thing being shown, edge to edge. */
+.hl-shot--photo { aspect-ratio: 3 / 2; }
+.hl-shot--photo img { object-fit: cover; }
+/* The frame not being shown is `hidden`, and `hidden` is a rule of one class's
+   worth of specificity in the user-agent sheet — which the line above outweighs.
+   Without this the whole gallery renders at once, stacked, and `overflow`
+   crops it to the first frame: the counter steps, the picture does not. */
+.hl-shot img[hidden] { display: none; }
+/* Over the picture at the two edges, which is where a hand reaches for them.
+   Solid rather than translucent: these sit on photographs that run from a
+   white render to a dark chamber interior, and a wash would vanish on one of
+   them. */
+.hl-step {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  width: 34px; height: 34px; padding: 0; display: grid; place-items: center;
+  border: 1px solid var(--line); border-radius: 50%;
+  background: var(--canvas); color: var(--ink); cursor: pointer;
+  transition: background .2s, border-color .2s, color .2s;
+}
+.hl-step svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.hl-step:hover { background: var(--primary); border-color: var(--primary); color: #fff; }
+.hl-step--prev { left: 10px; }
+.hl-step--next { right: 10px; }
+.hl-count {
+  position: absolute; right: 10px; bottom: 10px;
+  padding: 3px 9px; border-radius: var(--pill);
+  background: var(--canvas); border: 1px solid var(--line);
+  color: var(--body-dark); font-size: 12px; font-variant-numeric: tabular-nums;
+}
+.hl-facts { display: flex; flex-direction: column; align-items: flex-start; gap: 20px; }
+/* A panel with no plate beside it. The grid above is plate-left/figures-right,
+   so where the head office photographs nothing the figures were left holding
+   the left-hand column with half the panel empty next to them — 410px of
+   content in a 900px box on the PSG-300A, and it would have been three pills
+   in the same box on the five CDN rows, which have neither a photograph nor a
+   summary strip and open only for their datasheet. Nothing is to the right of
+   them, so they take the whole width. */
+.hl-panel-body > .hl-facts:only-child { grid-column: 1 / -1; }
+.hl-lead { color: var(--body-dark); font-size: 15px; line-height: 1.7; }
+/* The model page's summary pairs, set as text. Label left, figure right, one
+   hairline each — the same grammar as the row above them, an octave down. The
+   figure takes the weight because it is what a reader is scanning for; tabular
+   numerals so the column of dimensions does not jitter between rows. */
+.hl-figures { align-self: stretch; border-top: 1px solid var(--line); }
+.hl-figures > div { display: flex; align-items: baseline; justify-content: space-between; gap: 20px; padding: 9px 1px; border-bottom: 1px solid var(--line); }
+/* Label bold, figure plain — the opposite of how this started, and HQ's call
+   in the August review ("for the table it would have the text on the left in
+   bold or nothing at all"). It was 13px light against 15px bold, which put two
+   sizes and two weights into a strip four lines tall; one size and one weight
+   difference is what is left. */
+.hl-figures dt { flex: none; color: var(--ink); font-size: 14px; font-weight: 700; line-height: 1.5; }
+.hl-figures dd { margin: 0; color: var(--body-dark); font-size: 14px; font-weight: 400; line-height: 1.5; text-align: right; font-variant-numeric: tabular-nums; }
+/* The pills, one size down: they sit under a strip of 13px labels, not at the
+   foot of a band. */
+.hl-actions { gap: 12px; }
+.hl-actions .btn { padding: 9px 20px; gap: 12px; font-size: 15px; line-height: 22px; }
+/* The datasheet pill in a model panel. Its gap is tighter than the other two
+   pills' because it holds three things rather than one — arrow, label,
+   size — and the pill's own 12px between each of them read as three items
+   side by side rather than as one label. */
+.btn-doc { gap: 9px; }
+.btn-doc-ico { width: 15px; height: 15px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+/* The size, after the label and quieter than it: it is a caution, not a
+   promise, and the reader who needs it is the one on a phone about to pull
+   down 5 MB. `--mute` on the outline pill's white fill is 2.4:1, which is
+   under the floor for text — `--body-text` is the same grey the running copy
+   uses and clears it. On hover the pill's own colour wins, so the figure
+   travels with the label instead of staying grey against red. */
+.btn-doc-size { font-size: 13px; color: var(--body-text); font-variant-numeric: tabular-nums; }
+.btn-doc:hover .btn-doc-size { color: inherit; }
+/* Cancel the trailing-glyph lean `.btn:hover span` applies. See the note in
+   model-accordion.tsx. */
+.btn:hover .btn-doc-size { transform: none; }
+@media (max-width: 700px) {
+  .hl-panel-body { grid-template-columns: 1fr; gap: 20px; padding-bottom: 26px; }
+  .hl-caret { top: 25px; }
+}
+
+/* Trust — the reference's `.verify-section`: copy left, evidence right. */
+.trust { display: grid; grid-template-columns: 1.05fr .95fr; gap: 6vw; align-items: center; }
+.trust .kicker { display: inline-block; color: var(--primary); font-size: 15px; line-height: 1.5; font-weight: 800; letter-spacing: .01em; text-transform: uppercase; margin-bottom: 22px; }
+.trust h2 { font-size: clamp(34px, 3.6vw, 48px); font-weight: 300; line-height: 1.1; letter-spacing: 0; margin-bottom: 26px; }
+.trust h2 em { font-style: normal; color: var(--primary); }
+.trust p { color: var(--body-dark); font-size: 18px; line-height: 1.6; margin-bottom: 14px; max-width: 650px; }
+/* `.cs .standards-row` */
+.badges { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.badges-wide { grid-template-columns: repeat(3, 1fr); }
+/* Four across, matching the hero's own metric band, for the head office's
+   at-a-glance figures. */
+.badges-four { grid-template-columns: repeat(4, 1fr); }
+/* One badge, full width of its column. The CyberShield page opens its gap
+   argument on a single metric (`0 dB`) beside the paragraph that earns it; in
+   the two-column `.trust` grid a lone `.bd` would otherwise sit in a half-empty
+   row of the default two. */
+.badges-one { grid-template-columns: 1fr; }
+/* The model pages' "at a glance" strip.
+   Same grid, smaller type. The landing page's badges carry headline metrics —
+   `95%`, `1991`, `100%` — and 24px/800 is the right size for a number that is
+   an argument. A model page's values are designations and measurements
+   (`IEC/EN 61000-4-3`, `ø1.2 m`, `10,000 kg`): at that weight they read as
+   claims and six of them push the band past a screen, which is the opposite of
+   what a summary strip is for. At 17px/700 they read as specification, and the
+   whole strip is two rows.
+   Only the type and the padding change — the fill, the hairline and the hover
+   are the `.bd` every other band uses. */
+.badges-compact { gap: 10px; }
+.badges-compact .bd { padding: 12px 14px; }
+.badges-compact .bd b { font-size: 17px; font-weight: 700; letter-spacing: 0; }
+.badges-compact .bd span { margin-top: 2px; font-size: 12px; }
+.bd { background: var(--canvas-soft); border: 1px solid var(--mute); border-radius: var(--radius); padding: 16px 18px; transition: border-color .25s ease, background .25s ease, transform .25s ease; }
+.bd:hover { border-color: var(--primary); background: var(--canvas); transform: translateY(-2px); }
+.alt .bd { background: var(--canvas); }
+.alt .bd:hover { background: var(--canvas-soft); }
+.bd b { display: block; font-size: 24px; font-weight: 800; letter-spacing: -.02em; color: var(--ink); }
+.bd span { display: block; margin-top: 5px; font-size: 13px; line-height: 1.5; color: var(--body-text); }
+/* Figure — a photograph carried over from the head office site, framed like a
+   card (`.lc`) so an image band sits on the same hairline grammar as the rest
+   of the page. No shadow: depth here is surface contrast. */
+.figure { margin: 0; border: 1px solid var(--mute); border-radius: var(--radius); overflow: hidden; background: var(--canvas-soft); }
+.alt .figure { background: var(--canvas); }
+.figure img { display: block; width: 100%; height: auto; }
+/* `--body-dark`, not the running grey: a figure lands on `--canvas-soft` as
+   often as on `--canvas`, and there the lighter grey is 3.6:1. */
+.figure figcaption { padding: 14px 18px; font-size: 13px; line-height: 1.5; color: var(--body-dark); border-top: 1px solid var(--line); }
+/* The head office aerial under the two trust columns. Full frame width, so it
+   opens more air above itself than a figure inside a prose column does — it is
+   closing the band, not illustrating the paragraph immediately above it. After
+   `.figure` rather than before: same specificity, and `.figure { margin: 0 }`
+   would otherwise win on source order and the plate would sit flush. */
+.trust-shot { margin-top: 72px; }
+
+/* Check columns — the source page's paired "stands for" / "provides" lists.
+   Same hairline-per-row grammar as `.hairline-list`, with a primary check in
+   place of the index, so the two blocks read as one table split in two. */
+.check-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 20px 6vw; }
+/* Sub-head — a heading inside a band that already carries a `.sec-head`, for
+   where the source splits one band into named groups (the two vacancy lists,
+   the "stands for" / "provides" pair). One step down from `.sec-head h2`, same
+   Light voice. */
+.sub-head, .check-col h3 { font-size: 24px; font-weight: 300; line-height: 1.2; margin-bottom: 26px; }
+.sub-head b, .check-col h3 b { font-weight: 700; }
+.list-group + .list-group { margin-top: 64px; }
+/* Held to the same 900 the prose, the hairline lists, the entry lists and the
+   plates use. Without it this was the one block on the page that ran the full
+   band, so a benefit list and the paragraph above it ended 260px apart —
+   part of what HQ read as too many formats in one place. */
+.check-list { list-style: none; border-top: 1px solid var(--ink); max-width: 900px; }
+.check-list li { display: flex; align-items: baseline; gap: 14px; padding: 16px 4px; border-bottom: 1px solid var(--line); font-size: 16px; line-height: 1.5; color: var(--body-dark); transition: padding-left .25s ease, background .25s ease, color .25s ease; }
+.check-list li:hover { padding-left: 10px; color: var(--ink); background: var(--canvas); }
+/* `align-items: baseline` would drop the glyph onto the text baseline and hang
+   it below the first line, so the mark is nudged back up by hand. */
+.chk { flex: none; width: 15px; height: 15px; transform: translateY(2px); fill: none; stroke: var(--primary); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* Prose — a run of body paragraphs where the source gives no other structure
+   (the History narrative, the Career introduction). Narrower measure and more
+   leading than `.trust p`, because these runs are long. */
+.prose { max-width: 900px; }
+.prose p { font-size: 17px; line-height: 1.7; color: var(--body-dark); }
+.prose p + p { margin-top: 20px; }
+/* Where a narrative resumes after a split block or a plate, it takes the same
+   44px of air `.callout` and `.figure-wide` already open above themselves. */
+.trust + .prose, .figure-wide + .prose { margin-top: 44px; }
+
+/* Entry list — index, heading, then an optional second line that wraps.
+   `.hairline-list` cannot carry these: it pins its heading to one line
+   (`white-space: nowrap`) and right-aligns the description, which breaks on a
+   bibliographic citation, a German job title, or a milestone sentence. Same
+   hairline rhythm, stacked instead of split. */
+.entry-list { max-width: 900px; border-top: 1px solid var(--ink); }
+.entry { display: grid; grid-template-columns: 52px 1fr; gap: 0 12px; padding: 20px 4px; border-bottom: 1px solid var(--line); transition: padding-left .25s ease, background .25s ease; }
+.entry:hover { padding-left: 12px; background: var(--canvas-soft); }
+.alt .entry:hover { background: var(--canvas); }
+.entry .entry-idx { color: var(--primary); font-size: 13px; font-weight: 800; letter-spacing: .5px; padding-top: 4px; }
+.entry h4 { font-size: 17px; font-weight: 700; line-height: 1.45; transition: color .25s ease; }
+.entry:hover h4 { color: var(--primary); }
+/* The meta line sits under the heading, in the heading's column. */
+.entry p { grid-column: 2; margin-top: 7px; font-size: 14px; line-height: 1.6; color: var(--body-text); }
+.alt .entry p { color: var(--body-dark); }
+.entry .entry-links { grid-column: 2; margin-top: 10px; display: flex; flex-wrap: wrap; gap: 8px 20px; }
+.entry .entry-links a { color: var(--primary); font-weight: 700; font-size: 13px; }
+.entry .entry-links a:hover { text-decoration: underline; }
+
+/* Values — the source's four core values, each with its own four statements.
+   Built on `.num-col`, so the top rule and the primary index behave exactly as
+   they do in a numbered row; only the body changes from a paragraph to a list. */
+.value-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+.value-grid ul { list-style: none; }
+.value-grid li { position: relative; font-size: 14.5px; line-height: 1.55; color: var(--body-dark); padding: 9px 0 9px 15px; border-bottom: 1px solid var(--line); }
+.value-grid li:last-child { border-bottom: 0; }
+/* A short primary tick rather than a bullet glyph — the same hairline
+   vocabulary the rest of the page is built from. */
+.value-grid li::before { content: ""; position: absolute; left: 0; top: 18px; width: 6px; height: 1px; background: var(--primary); }
+
+/* Figure variants — a single wide plate under a text block, and a row of
+   small plates side by side. */
+/* The plates hold the text's own measure. They used to run three different
+   widths on one page — prose to 900, the wide plate to 1000, the row of three
+   to the full 1400 band — so nothing under a paragraph shared a right edge
+   with it or with anything else. HQ wrote it up twice in the August review:
+   "the picture on the top … flush with the right picture", and "the picture
+   should have the same size on every page and should be flush with the text".
+   One measure answers both. A plate whose source is narrower than 900 still
+   renders at its own width — enlarging a source is the one thing the asset
+   ledgers rule out, and the rule holds at render time (see `Figure`). */
+.figure-wide { max-width: 900px; margin-top: 44px; }
+.figure-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; max-width: 900px; }
+/* A row of plates opens the same air above itself a single wide plate does —
+   less when it is the second plate block in a row, because the two read as one
+   figure group rather than two. */
+.prose + .figure-row { margin-top: 44px; }
+.figure-wide + .figure-row { margin-top: 20px; }
+
+/* Spec table — the catalogue's own configuration tables. Every chamber spread
+   prints one: a row per size or variant, its external dimension, and the
+   qualifier underneath (the quiet zone, the test distance, the load machine).
+   `.hairline-list` cannot carry them, because a row here is three columns of
+   figures rather than a name and a description — but the grammar is the same
+   one, so the table keeps it: an ink rule over the head, a hairline per row,
+   the row lifting on hover, and tabular numerals so the digit columns line up
+   down the page. Figures and designations are never translated; only the
+   column headings are. */
+.spec-wrap { max-width: 1000px; overflow-x: auto; }
+.spec-wrap + .spec-wrap { margin-top: 56px; }
+/* Below the table's own measure the wrapper scrolls, and a reader has no way to
+   know a third column exists off the right edge. These four layers are the
+   standard cue: two solid-coloured masks scrolling *with* the content and two
+   shadows pinned to the frame, so a shadow only shows on the side that has
+   more table behind it, and disappears when that side is reached. The masks
+   have to match the band fill, which is why `.alt` restates them. */
+.spec-wrap {
+  background:
+    linear-gradient(to right, var(--canvas) 40%, rgba(255, 255, 255, 0)) 0 0 / 32px 100% no-repeat local,
+    linear-gradient(to left, var(--canvas) 40%, rgba(255, 255, 255, 0)) 100% 0 / 32px 100% no-repeat local,
+    radial-gradient(farthest-side at 0 50%, rgba(37, 40, 43, .13), rgba(37, 40, 43, 0)) 0 0 / 14px 100% no-repeat scroll,
+    radial-gradient(farthest-side at 100% 50%, rgba(37, 40, 43, .13), rgba(37, 40, 43, 0)) 100% 0 / 14px 100% no-repeat scroll;
+}
+.alt .spec-wrap {
+  background:
+    linear-gradient(to right, var(--canvas-soft) 40%, rgba(242, 242, 242, 0)) 0 0 / 32px 100% no-repeat local,
+    linear-gradient(to left, var(--canvas-soft) 40%, rgba(242, 242, 242, 0)) 100% 0 / 32px 100% no-repeat local,
+    radial-gradient(farthest-side at 0 50%, rgba(37, 40, 43, .13), rgba(37, 40, 43, 0)) 0 0 / 14px 100% no-repeat scroll,
+    radial-gradient(farthest-side at 100% 50%, rgba(37, 40, 43, .13), rgba(37, 40, 43, 0)) 100% 0 / 14px 100% no-repeat scroll;
+}
+.spec-table { width: 100%; min-width: 620px; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.spec-table th { text-align: left; vertical-align: bottom; padding: 0 20px 12px 4px; border-bottom: 1px solid var(--ink); color: var(--primary); font-size: 13px; font-weight: 800; letter-spacing: .01em; text-transform: uppercase; }
+.spec-table td { padding: 16px 20px 16px 4px; border-bottom: 1px solid var(--line); vertical-align: top; color: var(--body-dark); font-size: 15px; line-height: 1.5; }
+.spec-table tbody tr { transition: background .25s ease; }
+.spec-table tbody tr:hover { background: var(--canvas-soft); }
+.alt .spec-table tbody tr:hover { background: var(--canvas); }
+/* The first column is the row's name — a model designation or a measured
+   quantity — so it takes the weight the descriptor takes in `.hl-row`. */
+.spec-table td:first-child { color: var(--ink); font-weight: 700; white-space: nowrap; }
+/* The lines the catalogue prints under a dimension: same relation to the cell
+   as `.hl-spec` has to its row. */
+.spec-table small { display: block; margin-top: 5px; color: var(--body-text); font-size: 13px; line-height: 1.5; }
+.alt .spec-table small { color: var(--body-dark); }
+.spec-note { max-width: 1000px; margin-top: 18px; color: var(--body-text); font-size: 13.5px; line-height: 1.6; }
+.alt .spec-note { color: var(--body-dark); }
+
+/* Panorama — the head office's 360° panoramas, carried over without a viewer
+   library. On an equirectangular image the horizontal axis is yaw, linearly, so
+   scrolling the strip sideways *is* panning the room: keep going and the reader
+   arrives back where they started. The source is cropped to the middle half of
+   its height (±45° of elevation) because the poles of a full sphere flatten
+   into smears; what is left is an ordinary cylindrical panorama at 4:1.
+   Built on `.figure`, so the frame, the `.alt` fill and the caption are the
+   ones every other plate on this site uses. */
+.pano { max-width: 900px; }
+.pano-scroll { overflow-x: auto; overflow-y: hidden; }
+/* The image overruns its frame rather than fitting it, which is what leaves
+   something to scroll — so `.figure img`'s `width: 100%` has to go. Fixing the
+   height lets the width follow the ratio: 460px tall is ~1840px wide against a
+   900px frame, so half the room is off-screen at any moment. */
+.pano-scroll img { width: auto; max-width: none; height: 460px; }
+/* The scroller carries the focus ring, not the figure: a reader on the keyboard
+   has to land on the element the arrow keys scroll. Inset, because the frame's
+   own hairline is one pixel outside it. */
+.pano-scroll:focus-visible { outline: 2px solid var(--primary); outline-offset: -3px; }
+
+/* Statement — a single line the head office site gives a section of its own.
+   Left-aligned over a short primary rule: the reference never centres a
+   heading, and the left edge is the spine every band hangs from. */
+.statement { max-width: 900px; }
+.statement::before { content: ""; display: block; width: 64px; height: 3px; background: var(--primary); margin-bottom: 34px; }
+.statement p { font-size: clamp(26px, 2.8vw, 38px); font-weight: 300; line-height: 1.28; letter-spacing: 0; }
+
+/* `.closing` — the band `PageShell` puts the page's last sentence in — carries
+   no rules of its own on purpose. It is an ordinary untinted `section` holding
+   an ordinary `.statement`, which is what the About page has always been and
+   what the head office approved; a fill, a rule or a tighter padding here would
+   make the ending a different component on every other page. The class is a
+   name for the band, for the export test and for anyone looking for it. */
+
+/* Belief — the CyberShield page's opening argument, where the layout carries
+   the point rather than describing it: the practice being rejected on the left
+   under a neutral rule, what replaces it on the right under a primary one, at
+   equal width so the reader reads a reversal and not a rebuttal.
+   Two columns of running prose, which is why it takes its own grid instead of
+   `.check-cols` — that one pairs label rows, and its `h3` is a 24px heading
+   where these are micro-caps in the kicker's voice. */
+.belief { display: grid; grid-template-columns: 1fr 1fr; gap: 20px 6vw; max-width: 1200px; }
+.belief > div { border-top: 3px solid var(--mute); padding-top: 26px; }
+.belief > div + div { border-top-color: var(--primary); }
+/* 13px/800, the size the red index labels (`.num-col .num`) already use on the
+   soft band — the smallest the site sets --primary at, and this band should not
+   become a new smallest. */
+.belief h3 { color: var(--body-dark); font-size: 13px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; margin-bottom: 18px; }
+.belief > div + div h3 { color: var(--primary); }
+/* The status quo is quoted, not asserted, so it sits back a tone; what we
+   believe is the page's own voice and comes forward. The step is --body-dark
+   to --ink rather than --body-text to --body-dark: this band is `.alt`, and
+   --body-text on --canvas-soft is 3.6:1, under the AA floor for a paragraph
+   this long. */
+.belief p { color: var(--body-dark); font-size: 16.5px; line-height: 1.7; }
+.belief > div + div p { color: var(--ink); }
+
+/* ===== MyChamber =====
+   The questionnaire, its result cards and the enquiry form. Built from the
+   vocabulary already on this page — the card hairline and 4px lift of `.lc`,
+   the primary rule of `.callout`, the check rows of `.check-list` — so a
+   sequence of questions still reads as the same site as the pages it leads to.
+   Nothing here introduces a shadow, a gradient or a second radius. */
+
+/* Progress. A count in the kicker's voice, then the flow itself as a row of
+   nodes on a connector: a tick behind the reader, a filled ring where they
+   are, a number ahead of them. Under each node the question it asks and the
+   answer given to it — which is why this is also the only place the answers
+   are listed, the result page included. There is no summary section further
+   down; a second copy of the answers would only be a second place to keep in
+   step, and a reader who wants to change one goes back to the question.
+
+   The pill uses `--pill`, the radius this site already gives to a label of
+   this shape, and the row carries no shadow and no gradient. */
+.mc-progress { margin-bottom: 44px; }
+.mc-count { display: block; color: var(--primary); font-size: 13px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+
+/* Left-aligned, like everything else on the page: the first node sits on the
+   column's edge under the count, not inset by half a segment. Each item holds
+   its node at its own left edge and carries the connector on from there, so
+   there is no gap between items to cut the line — the pills are spaced by
+   their own margin instead. */
+.mc-steps { display: flex; align-items: flex-start; list-style: none; margin: 22px 0 0; padding: 0; }
+.mc-step { position: relative; flex: 1 1 0; min-width: 0; }
+/* The connector, from under this node to the next. Behind the node, so the
+   filled circle covers the join; the last one runs out to the end of the row,
+   which is what keeps the track the width of the column. */
+.mc-step::after { content: ""; position: absolute; top: 13px; left: 15px; right: 0; height: 4px; background: var(--line); transition: background .25s ease; }
+.mc-step.is-done::after { background: var(--primary); }
+
+.mc-step-btn { display: flex; flex-direction: column; align-items: flex-start; width: 100%; padding: 0; background: none; border: 0; font: inherit; color: inherit; text-align: left; cursor: pointer; }
+.mc-step-btn:disabled { cursor: default; }
+.mc-step-btn:focus-visible { outline: 2px solid var(--primary); outline-offset: 4px; border-radius: var(--pill); }
+
+.mc-step-dot { position: relative; z-index: 1; display: flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 50%; background: var(--canvas-soft); color: var(--body-text); font-size: 13px; font-weight: 800; transition: background .25s ease, color .25s ease; }
+.mc-step.is-done .mc-step-dot, .mc-step.is-now .mc-step-dot { background: var(--primary); color: var(--white); }
+/* Where the reader is: a white centre inside the filled node, as opposed to
+   the tick of a question already behind them. */
+.mc-step.is-now .mc-step-dot::after { content: ""; width: 11px; height: 11px; border-radius: 50%; background: var(--white); }
+.mc-step-chk { width: 15px; height: 15px; fill: none; stroke: var(--white); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* The label, with a caret up to its node. `::before` is the caret and takes
+   the pill's own background, so the three states colour together. */
+.mc-step-pill { position: relative; max-width: calc(100% - 10px); margin-top: 16px; padding: 7px 15px; border-radius: var(--pill); background: var(--canvas-soft); color: var(--body-dark); font-size: 12.5px; font-weight: 700; line-height: 1.3; transition: background .25s ease, color .25s ease; }
+.mc-step-pill > span { display: block; max-width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.mc-step-pill::before { content: ""; position: absolute; top: -5px; left: 15px; transform: translateX(-50%); border-left: 6px solid transparent; border-right: 6px solid transparent; border-bottom: 5px solid var(--canvas-soft); transition: border-color .25s ease; }
+.mc-step.is-now .mc-step-pill { background: var(--primary); color: var(--white); }
+.mc-step.is-now .mc-step-pill::before { border-bottom-color: var(--primary); }
+.mc-step.is-done .mc-step-pill { color: var(--ink); }
+
+/* The answer itself. Two lines at most — the standards used to run to four,
+   and a strip that grows with the answer would push the question off screen. */
+.mc-step-val { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; max-width: calc(100% - 8px); margin-top: 9px; overflow: hidden; color: var(--body-text); font-size: 12px; line-height: 1.45; }
+.mc-step.is-done .mc-step-val { color: var(--body-dark); }
+.mc-step.is-todo .mc-step-val { color: var(--mute); }
+
+.mc-step-btn:not(:disabled):hover .mc-step-pill { background: var(--primary); color: var(--white); }
+.mc-step-btn:not(:disabled):hover .mc-step-pill::before { border-bottom-color: var(--primary); }
+.mc-step-btn:not(:disabled):hover .mc-step-dot { background: var(--primary); color: var(--white); }
+.mc-step-hint { margin-top: 22px; color: var(--body-dark); font-size: 13px; line-height: 1.6; }
+
+.mc-head { margin-bottom: 32px; }
+/* The heading takes focus when the step changes, so it needs a ring of its
+   own — the shared rule below covers only the interactive elements. */
+h2[tabindex]:focus-visible { outline: 2px solid var(--primary); outline-offset: 8px; border-radius: 2px; }
+
+.mc-mode { color: var(--mute); font-size: 12px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; margin-bottom: 14px; }
+.mc-opt-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; max-width: 900px; }
+.mc-opt { position: relative; display: flex; align-items: flex-start; gap: 14px; padding: 18px 20px; background: var(--canvas-soft); border: 1px solid var(--mute); border-radius: var(--radius); cursor: pointer; transition: border-color .25s ease, background .25s ease, transform .3s cubic-bezier(.22, .61, .36, 1); }
+.mc-opt:hover { border-color: var(--primary); background: var(--canvas); transform: translateY(-2px); }
+/* Selected state carries the 3px primary rule `.callout` uses. Drawn as an
+   element rather than an inset shadow — this site has no shadow in it, and
+   colour is not the only signal here anyway: the box beside it is ticked. */
+.mc-opt.on { border-color: var(--primary); background: var(--canvas); }
+.mc-opt.on::before { content: ""; position: absolute; top: -1px; bottom: -1px; left: -1px; width: 3px; background: var(--primary); border-radius: var(--radius) 0 0 var(--radius); }
+.mc-opt:focus-within { outline: 2px solid var(--primary); outline-offset: 3px; }
+.mc-opt input { flex: none; width: 17px; height: 17px; margin-top: 3px; accent-color: var(--primary); }
+.mc-opt-body b { display: block; font-size: 16px; font-weight: 700; line-height: 1.4; }
+.mc-opt-body span { display: block; margin-top: 5px; color: var(--body-dark); font-size: 13.5px; line-height: 1.5; }
+
+.mc-actions { align-items: center; margin-top: 34px; }
+.mc-need { color: var(--body-dark); font-size: 14px; }
+
+/* Questionnaire fields (mychamber-questionnaire.tsx). The same grammar as the
+   wizard's steps — option cards, hairline inputs — stacked as one form, so a
+   field needs a heading of its own where a step had the section head. */
+.mc-q-field { margin-top: 34px; }
+.mc-q-field:first-child { margin-top: 0; }
+.mc-q-label { font-size: 16px; font-weight: 700; margin-bottom: 10px; }
+.mc-q-label em { margin-left: 8px; color: var(--primary); font-style: normal; font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+
+/* The questionnaire's own progress, which is a count and a bar rather than the
+   wizard's row of labelled nodes. The wizard asks five questions at most and
+   can name every one of them on a row; questionnaire Ⓑ asks thirteen, and
+   thirteen pills would be thirteen ellipses. The answers are reviewed on the
+   last step instead, where there is room to print them.
+
+   Each tick is a button back to that question, disabled ahead of the reader:
+   a question further on may not exist until this one is answered. */
+.mcq-progress { margin-bottom: 40px; }
+.mcq-bar { display: flex; gap: 4px; list-style: none; margin: 16px 0 0; padding: 0; }
+.mcq-tick { flex: 1 1 0; min-width: 0; }
+.mcq-tick button { display: block; width: 100%; height: 6px; padding: 0; background: var(--line); border: 0; border-radius: 3px; transition: background .25s ease; }
+.mcq-tick button:not(:disabled) { cursor: pointer; }
+.mcq-tick.is-done button { background: var(--primary); }
+.mcq-tick.is-now button { background: var(--primary); }
+.mcq-tick.is-now button { box-shadow: 0 0 0 3px var(--canvas), 0 0 0 4px var(--primary); }
+.mcq-tick button:not(:disabled):hover { background: var(--body-dark); }
+.mcq-tick button:focus-visible { outline: 2px solid var(--primary); outline-offset: 4px; }
+
+/* The last step's review of the answers. One line per field, each a way back
+   to its own question — the bar above only counts, and a reader who spots a
+   wrong answer here should not have to count backwards to reach it. */
+.mcq-review-h { margin: 40px 0 4px; font-size: 15px; font-weight: 700; }
+.mcq-review { list-style: none; margin: 0; padding: 0; max-width: 900px; border-top: 1px solid var(--line); }
+.mcq-review li { border-bottom: 1px solid var(--line); }
+.mcq-review-btn { display: grid; grid-template-columns: 220px 1fr; gap: 20px; width: 100%; padding: 12px 4px; background: none; border: 0; font: inherit; color: inherit; text-align: left; cursor: pointer; }
+.mcq-review-btn:hover { background: var(--canvas-soft); }
+.mcq-review-btn:focus-visible { outline: 2px solid var(--primary); outline-offset: -2px; }
+.mcq-review-btn > span { color: var(--body-dark); font-size: 13px; }
+.mcq-review-btn > b { font-size: 14px; font-weight: 700; line-height: 1.5; overflow-wrap: anywhere; white-space: pre-line; }
+
+/* Result cards. Picture left, everything else right — the picture is a
+   category photograph and is captioned as one, so it sits in its own ink
+   panel rather than bleeding into the card the way `.lc-shot` does. */
+.mc-results { display: grid; gap: 20px; }
+.mc-card { display: grid; grid-template-columns: 300px 1fr; background: var(--canvas-soft); border: 1px solid var(--mute); border-radius: var(--radius); overflow: hidden; }
+.mc-card--top { background: var(--canvas); border-color: var(--primary); }
+/* `align-self: start` so the ink panel is the height of the picture and its
+   caption, not of the whole card — the copy beside it runs to 700px, and a
+   440px block of unbroken ink under a 200px photograph would be the darkest
+   thing on the page for no reason. */
+.mc-shot { margin: 0; align-self: start; display: flex; flex-direction: column; background: var(--ink); }
+/* 3:2, the ratio every other photograph on this site is framed at
+   (`.lc-shot`), rather than stretched to the height of whatever the card body
+   happens to be — a 900×578 photograph pulled to 300×560 would show a third of
+   its width and none of the room. The ink behind it is what a plate that has
+   not arrived yet shows, rather than the card's own paper flashing through. */
+/* `height: auto` is load-bearing: the <img> carries the source's own height
+   attribute, which is a presentational hint that would otherwise win over
+   aspect-ratio and leave the picture at its intrinsic height. */
+.mc-shot img { flex: none; width: 100%; height: auto; aspect-ratio: 3 / 2; object-fit: cover; display: block; }
+.mc-card-body { padding: 26px 30px 26px; }
+.mc-rank { display: inline-block; padding: 4px 13px; border: 1px solid var(--line); border-radius: var(--pill); color: var(--body-text); font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.mc-card--top .mc-rank { background: var(--primary); border-color: var(--primary); color: #fff; }
+/* Model designations are Latin in both locales, so this keeps the display
+   voice rather than the Korean heading exception. */
+.mc-card h3 { font-size: 26px; font-weight: 700; line-height: 1.2; margin: 16px 0 8px; }
+.mc-desc { max-width: 640px; color: var(--body-dark); font-size: 15px; line-height: 1.6; }
+/* The pinned-down configuration. Carries the primary rule `.callout` and
+   `.mc-caveat` use, because it is the same kind of aside — one fact set off
+   from the running description, not a second heading. */
+.mc-variant { margin-top: 20px; padding: 14px 18px; border-left: 3px solid var(--primary); background: var(--canvas-soft); border-radius: var(--radius); }
+.mc-card--top .mc-variant { background: var(--canvas-soft); }
+.mc-variant-label { display: block; margin-bottom: 6px; color: var(--primary); font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+.mc-variant b { font-size: 17px; font-weight: 700; }
+.mc-variant span:not(.mc-variant-label) { display: block; margin-top: 4px; color: var(--body-dark); font-size: 13.5px; line-height: 1.5; font-variant-numeric: tabular-nums; }
+
+.mc-spec { margin-top: 22px; border-top: 1px solid var(--line); }
+.mc-spec > div { display: grid; grid-template-columns: 140px 1fr; gap: 14px; padding: 11px 2px; border-bottom: 1px solid var(--line); }
+.mc-spec dt { color: var(--body-text); font-size: 13px; font-weight: 700; }
+.mc-spec dd { font-size: 14px; line-height: 1.5; font-variant-numeric: tabular-nums; }
+.mc-why { margin-top: 24px; }
+.mc-why h4 { color: var(--primary); font-size: 12px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; margin-bottom: 6px; }
+/* The check rows are `.check-list`, minus the ink rule over the top and the
+   hover shift — inside a card there is nothing to shift toward. */
+.mc-why .check-list { border-top: 0; }
+.mc-why .check-list li { padding: 9px 2px; font-size: 14.5px; }
+.mc-why .check-list li:hover { padding-left: 2px; background: none; color: var(--body-dark); }
+.mc-caveat { margin-top: 22px; padding: 16px 20px; border-left: 3px solid var(--primary); background: var(--canvas-soft); border-radius: var(--radius); color: var(--body-dark); font-size: 14px; line-height: 1.6; }
+.mc-card--top .mc-caveat { background: var(--canvas-soft); }
+.mc-caveat b { display: block; margin-bottom: 6px; color: var(--ink); font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+.mc-card-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px 24px; margin-top: 26px; padding-top: 20px; border-top: 1px solid var(--line); }
+.mc-choose { display: inline-flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 700; cursor: pointer; }
+.mc-choose input { width: 17px; height: 17px; accent-color: var(--primary); }
+.mc-choose.on { color: var(--primary); }
+
+/* Enquiry form. The site had no input styling at all until this page — these
+   are the card's own hairline and radius on a field. */
+.mc-form { max-width: 900px; }
+.mc-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.mc-field { display: flex; flex-direction: column; gap: 8px; }
+.mc-field--wide { margin-top: 20px; }
+.mc-field label { font-size: 13px; font-weight: 700; }
+.mc-field label em { margin-left: 8px; color: var(--primary); font-style: normal; font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+.mc-field input, .mc-field textarea { width: 100%; padding: 12px 14px; font: inherit; font-size: 15px; color: var(--ink); background: var(--canvas); border: 1px solid var(--mute); border-radius: var(--radius); transition: border-color .2s; }
+.mc-field input:hover, .mc-field textarea:hover { border-color: var(--body-text); }
+.mc-field textarea { resize: vertical; line-height: 1.6; }
+.mc-note { margin-top: 16px; color: var(--body-dark); font-size: 14px; }
+
+/* ===== MyCart =====
+   Two surfaces: the control in the header, which is dark chrome, and the page,
+   which reuses the enquiry form above wholesale — `.mc-form`, `.mc-fields` and
+   `.mc-field` are form furniture rather than anything MyChamber owns, and a
+   second set of input rules under a different prefix would be two places to
+   keep one text field in step. What is new below is the basket itself. */
+
+/* --- The header control --- */
+/* Not inside `nav.menu`: it sits between the menu and the language switch and
+   survives the 1240px fold that hides the menu. See cart-button.tsx. */
+.cart { position: relative; display: flex; align-items: center; flex: none; }
+.cart-btn {
+  position: relative; display: inline-flex; align-items: center; justify-content: center;
+  width: 40px; height: 40px; border: 1px solid var(--line); border-radius: 50%;
+  color: var(--ink); transition: background .2s, border-color .2s, color .2s;
+}
+/* The same fill the marked nav entry takes on hover, for the same reason: it
+   is the one other control in the bar that is a destination rather than a
+   menu, and the pair should read as the same gesture. */
+.cart-btn:hover, .cart:focus-within .cart-btn { background: var(--primary); border-color: var(--primary); color: #fff; }
+/* A list with something in it is not the same object as an empty one, and the
+   count alone is easy to miss at 11px. */
+.cart-btn.has-items { border-color: var(--primary); }
+.cart-ico { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.cart-ico circle { fill: currentColor; stroke: none; }
+/* The paper ring is what keeps the badge legible where it overlaps the
+   button's own border — and what keeps it visible once hover fills the button
+   red, at which point the badge inverts rather than disappearing into it. */
+.cart-count {
+  position: absolute; top: -2px; right: -4px; min-width: 19px; height: 19px; padding: 0 5px;
+  border-radius: var(--pill); background: var(--primary); color: #fff;
+  font-size: 11px; font-weight: 800; line-height: 19px; text-align: center;
+  box-shadow: 0 0 0 2px var(--canvas);
+}
+.cart-btn:hover .cart-count, .cart:focus-within .cart-count { background: #fff; color: var(--primary); }
+
+/* The peek. Same ink panel and hairline as the navigation's dropdowns, and the
+   same 16px of dead space above it so the pointer can cross the gap. Anchored
+   to its right edge rather than centred: it is 300px wide and the icon is
+   about 120px from the end of the bar. */
+.cart-peek { position: absolute; top: 100%; right: -12px; padding-top: 16px; display: none; z-index: 120; }
+.cart:hover .cart-peek, .cart:focus-within .cart-peek { display: block; }
+.cart-panel { width: 320px; background: var(--canvas); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 0 0; }
+.cart-panel-h { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 0 18px 10px; color: var(--ink); font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+.cart-panel-h span { color: var(--body-text); }
+.cart-panel-empty { padding: 4px 18px 14px; }
+.cart-panel-empty b { display: block; color: var(--ink); font-size: 14px; font-weight: 700; }
+.cart-panel-empty span { display: block; margin-top: 6px; color: var(--body-text); font-size: 12.5px; line-height: 1.5; }
+.cart-peek-list { list-style: none; margin: 0; padding: 0; }
+.cart-peek-list li { display: flex; align-items: flex-start; gap: 10px; padding: 8px 12px 8px 18px; border-top: 1px solid var(--line); }
+.cart-peek-name { min-width: 0; flex: 1; }
+.cart-peek-name b { display: block; color: var(--ink); font-size: 13.5px; font-weight: 700; line-height: 1.35; }
+/* One line and then an ellipsis: the descriptor is here to tell two similar
+   designations apart, and three lines of it would push the way out of the
+   panel off the bottom of the screen. */
+.cart-peek-name span { display: block; margin-top: 2px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: var(--body-text); font-size: 11.5px; }
+.cart-peek-more { padding: 8px 18px 0; color: var(--body-text); font-size: 12px; }
+.cart-panel-foot { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 12px; border-top: 1px solid var(--line); background: var(--canvas-soft); padding: 10px 18px 11px; border-radius: 0 0 var(--radius) var(--radius); }
+.cart-panel-foot a { color: var(--ink); font-size: 13px; font-weight: 700; }
+.cart-panel-foot a:hover { color: var(--primary); }
+.cart-clear { padding: 0; background: none; border: 0; font: inherit; font-size: 12.5px; color: var(--body-text); cursor: pointer; }
+.cart-clear:hover { color: var(--primary); }
+/* The ✕ that takes one line back out, in the panel and on the page. */
+.cart-x { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; padding: 0; background: none; border: 0; border-radius: 50%; color: var(--mute); cursor: pointer; transition: background .2s, color .2s; }
+.cart-x:hover { background: rgba(217, 25, 32, .12); color: var(--primary); }
+.cart-x svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; }
+
+/* --- The add button --- */
+/* The compact pill, used where the controls beside it are text — the MyChamber
+   card foot. The model rows pass `btn btn-outline` instead and pick up `.on`
+   from the rule below. */
+.cart-add {
+  display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px;
+  background: var(--canvas); border: 1px solid var(--mute); border-radius: var(--pill);
+  font: inherit; font-size: 13.5px; font-weight: 700; color: var(--ink); cursor: pointer;
+  transition: background .2s, border-color .2s, color .2s;
+}
+.cart-add:hover { border-color: var(--primary); color: var(--primary); }
+.cart-add.on, .btn-outline.on { background: var(--primary); border-color: var(--primary); color: #fff; }
+.cart-add.on:hover, .btn-outline.on:hover { background: var(--primary-dark); border-color: var(--primary-dark); color: #fff; }
+.cart-add-ico { width: 15px; height: 15px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.cart-add-ico circle { fill: currentColor; stroke: none; }
+
+/* --- The page --- */
+.cart-empty { max-width: 760px; }
+.cart-empty-btns { justify-content: center; }
+/* Count on the left, what is ticked in the middle, the two list-wide controls
+   on the right — the same three-part strip the model indexes carry above a
+   list, at the same weight. */
+.cart-bar { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 20px; padding-bottom: 14px; border-bottom: 1px solid var(--line); }
+.cart-bar-count { color: var(--primary); font-size: 13px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+.cart-bar-picked { color: var(--body-text); font-size: 13.5px; }
+.cart-bar-acts { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 4px; margin-left: auto; }
+.cart-confirm { display: inline-flex; flex-wrap: wrap; align-items: baseline; gap: 4px; color: var(--ink); font-size: 13px; font-weight: 700; }
+.cart-confirm-no { color: var(--body-text); }
+
+.cart-list { list-style: none; margin: 0; padding: 0; }
+/* Three columns: the tick, the product, the two things you can do to it. The
+   tick is a column of its own rather than a control floating in the copy
+   because it is the one thing on this page a reader operates on every line,
+   and it should be in the same place on all of them. */
+.cart-item { display: grid; grid-template-columns: auto 1fr auto; gap: 8px 24px; align-items: start; padding: 24px 2px; border-bottom: 1px solid var(--line); }
+/* An unticked line is still in the cart. It is dimmed rather than struck
+   through or greyed out entirely — struck through reads as deleted, which is
+   the one thing it is not. */
+.cart-item:not(.on) .cart-item-body { opacity: .5; }
+.cart-tick { display: inline-flex; align-items: center; gap: 9px; padding-top: 3px; font-size: 12px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; color: var(--body-text); white-space: nowrap; cursor: pointer; }
+.cart-tick input { width: 18px; height: 18px; accent-color: var(--primary); }
+.cart-item.on .cart-tick { color: var(--primary); }
+.cart-item-body { min-width: 0; }
+.cart-item-body h3 { font-size: 22px; font-weight: 700; line-height: 1.25; }
+.cart-item-desc { margin-top: 6px; color: var(--body-dark); font-size: 15px; line-height: 1.6; max-width: 640px; }
+.cart-item-spec { list-style: none; margin: 12px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 4px 18px; }
+.cart-item-spec li { color: var(--body-text); font-size: 13px; line-height: 1.5; font-variant-numeric: tabular-nums; }
+/* The MyChamber branch, where a chamber came from one. Set off the way the
+   card's own `.mc-variant` is, because it is the same fact. */
+.cart-item-config { margin-top: 14px; padding: 12px 16px; border-left: 3px solid var(--primary); background: var(--canvas-soft); border-radius: var(--radius); }
+.cart-item-label { display: block; margin-bottom: 5px; color: var(--primary); font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+.cart-item-config ul { list-style: none; margin: 0; padding: 0; }
+.cart-item-config li { color: var(--body-dark); font-size: 13px; line-height: 1.6; }
+.cart-item-meta { display: flex; flex-wrap: wrap; gap: 4px 16px; margin-top: 12px; color: var(--mute); font-size: 12.5px; }
+.cart-item-acts { display: flex; align-items: center; gap: 10px; }
+.cart-warn { margin-top: 12px; padding: 12px 16px; border-left: 3px solid var(--primary); background: var(--canvas); border-radius: var(--radius); color: var(--body-dark); font-size: 13.5px; line-height: 1.6; max-width: 640px; }
+
+/* Contact band — the page's one red full-bleed surface, once per page.
+   Left-aligned on the same container as every other band; the reference's
+   `.contact-section` does not centre either. */
+/* The band is deliberately smaller than every other section on the site, and
+   it is the one place the 120px section rhythm does not apply. At the section
+   padding it measured 598px — the tallest object on most pages and, in red, the
+   loudest. The head office read it as "that thick red bar" in the September
+   review; frankonia-solutions.com sets its own red CTA section at 64px of
+   padding and 200px overall, so that is what this is sized against now. 48px
+   plus the tightened type and a paragraph cut to two lines lands it near 310px
+   — a little under half what it was, and no longer the largest surface on the
+   page. It does not go all the way to 200: the head office's own band carries
+   one uppercase line and a link, and this one carries the three things a first
+   reply actually needs. */
+/* Paper, not red. Shrinking the band answered half of what the head office
+   asked and left the other half standing: at any height it was still the one
+   saturated surface on the page, and the note that produced it — "no red on
+   black", "align it more with the existing Frankonia homepage and the light
+   colours" — is about where red is allowed to be a *surface* rather than about
+   how tall this one was.
+
+   So the band keeps its job and gives up its fill. `--canvas-soft` puts it one
+   step below the content above it and one step above the ink footer below, and
+   the polarity ladder runs canvas → soft → ink to the bottom of every page
+   instead of jumping to red and back.
+
+   What red gets back in the trade: the primary button. On the red band a red
+   CTA was impossible — the fill had to flip to white — so the page's most
+   important control was the one place on the site that did not look like a
+   Frankonia CTA. On paper it is `.btn-red` like every other one, which is also
+   what frankonia-solutions.com does with its own closing call. The site's red
+   is now accents and controls only: no red surface anywhere. */
+.band { background: var(--canvas-soft); color: var(--ink); text-align: left; padding-block: 48px; padding-inline: max(4vw, calc((100% - 1400px) / 2)); border-top: 1px solid var(--line); }
+/* The hairline above is what makes this read as a band at all. Against the
+   white content it closes, a 5% step in value is a seam, not an edge. */
+/* `--primary` on `--canvas-soft` is 4.56:1 — the same eyebrow every section
+   heading on the site carries, held at 13px because this band is the compact
+   one. */
+.band .kicker, .band .tag { display: inline-block; color: var(--primary); font-size: 13px; line-height: 1.5; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; margin-bottom: 10px; }
+/* One step below `.sec-head h2` rather than level with it: this band closes the
+   page, it does not open a section. */
+.band h2 { font-size: clamp(26px, 2.4vw, 34px); font-weight: 300; line-height: 1.15; letter-spacing: 0; margin-bottom: 14px; max-width: 760px; }
+/* Two lines at this measure. The copy was cut to fit — see `ctP` in landing.tsx
+   — because the paragraph alone was 144px of the old band's height.
+   `--body-dark`, not the running grey: this is prose on `--canvas-soft`. */
+.band p { color: var(--body-dark); margin-bottom: 24px; font-size: 17px; line-height: 1.55; max-width: 640px; }
+/* `.btn-red` and `.btn-outline` need no override here any more — the band is
+   the same paper the rest of the page is, so both pills are already right. */
+.band .btns { justify-content: flex-start; }
+
+/* Footer */
+/* `.cs footer`: ink band, 55px of padding, 55% white running text. */
+footer { background: var(--ink); color: rgba(255, 255, 255, .55); padding: 55px 0 40px; font-size: 14px; line-height: 1.6; }
+.foot { display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr; gap: 40px; margin-bottom: 34px; }
+/* The reference's column heads (`.cs .company-column h3`) are primary
+   ExtraBold micro-caps over a hairline. Not here, and not any more: primary on
+   ink is 3.08:1, so at 12px these four headings were the site's clearest AA
+   failure, and they are exactly what the head office meant by "no red on
+   black". frankonia-solutions.com sets its own footer heads in plain grey on
+   the same dark band. 75% white measures 8.1:1 and keeps the micro-caps voice
+   the rest of the site's kickers have. */
+footer h5 { color: rgba(255, 255, 255, .75); font-size: 12px; font-weight: 800; letter-spacing: .09em; text-transform: uppercase; margin: 0 0 14px; padding-bottom: 14px; border-bottom: 1px solid rgba(255, 255, 255, .2); }
+footer ul { list-style: none; }
+footer li { padding: 4px 0; }
+footer a:hover { color: #fff; }
+.foot-desc { max-width: 340px; }
+/* One line per element, held to the description's measure. The address used to
+   be a single ` · `-joined run with no max-width, so it stretched the first
+   column across the footer — see the note on `ftAddr` in landing.tsx. */
+.foot-addr { margin-top: 12px; max-width: 340px; font-style: normal; }
+.foot-addr span { display: block; }
+.copy { border-top: 1px solid rgba(255, 255, 255, .2); padding-top: 22px; font-size: 13px; color: rgba(255, 255, 255, .55); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+/* The end of the copy row was empty between the notice and the domain; the
+   four accounts fill it as icons rather than a fifth link column, so the
+   row stays one line. 18px keeps the domain clear of the last circle. */
+.copy-end { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+.foot-social { display: flex; align-items: center; gap: 8px; }
+.foot-social li { padding: 0; }
+/* 32px is the smallest circle that still clears the 24px touch guidance
+   once the 15px glyph is centred in it. */
+.foot-social a { display: grid; place-items: center; width: 32px; height: 32px; border: 1px solid rgba(255, 255, 255, .2); border-radius: 50%; transition: color .18s, background .18s, border-color .18s; }
+.foot-social a:hover { background: rgba(255, 255, 255, .12); border-color: rgba(255, 255, 255, .5); color: #fff; }
+.foot-social svg { width: 15px; height: 15px; fill: currentColor; }
+
+/* ===== Accessibility ===== */
+
+/* The route-change indicator. Why a client navigation needs one at all, and
+   why this one waits before it appears and never fills: nav-progress.tsx.
+
+   Above the header (100) and its dropdown panels (120) — the bar reports the
+   whole page's state and the reader is usually still inside a menu when it
+   runs. It sits under the skip link's 200 by not competing: the two are never
+   on screen together.
+
+   `scaleX` rather than `width`: the browser can run a transform on the
+   compositor, and this animates during exactly the seconds the main thread is
+   busy parsing the payload it is reporting on. A width transition would jerk
+   in step with that work, which is the opposite of what a progress bar is for. */
+.nav-progress { position: fixed; top: 0; left: 0; right: 0; height: 3px; z-index: 150; pointer-events: none; }
+.nav-progress i { display: block; height: 100%; background: var(--primary); transform: scaleX(0); transform-origin: left center; }
+/* Eight seconds of deceleration that lands at 90% and stops. The curve is
+   steep at the start so the first tenth of a second is visibly movement. */
+.nav-progress--loading i { transform: scaleX(.9); transition: transform 8s cubic-bezier(0, .7, .2, 1); }
+.nav-progress--done i { transform: scaleX(1); transition: transform .16s ease-out; }
+.nav-progress--done { opacity: 0; transition: opacity .22s ease-out .1s; }
+/* The bar still has to say "working" — it just says it without the travel. */
+@media (prefers-reduced-motion: reduce) {
+  .nav-progress--start i, .nav-progress--loading i { transform: scaleX(.9); transition: none; }
+  .nav-progress--done i { transition: none; }
+}
+
+/* Visible only once tabbed to — the first stop past the browser chrome, so
+   keyboard and screen-reader users can jump the 6-item nav on every page. */
+.skip-link { position: absolute; left: 16px; top: -60px; z-index: 200; background: var(--red); color: #fff; padding: 10px 18px; border-radius: var(--radius); font-size: 14px; font-weight: 700; transition: top .15s; }
+/* :focus, not :focus-visible — the link has to reveal itself for any focus it
+   receives, including focus moved by assistive tech rather than by Tab. */
+.skip-link:focus { top: 12px; }
+
+a:focus-visible, button:focus-visible, summary:focus-visible,
+input:focus-visible, select:focus-visible, textarea:focus-visible {
+  outline: 2px solid var(--red);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+/* Red on ink only reaches 2.4:1, so the outline flips to white wherever the
+   background is dark. */
+/* The footer is the only dark surface left on the site — the contact band gave
+   up its red fill in the same round the chrome went white. Everything else
+   takes the default red ring. */
+footer a:focus-visible { outline-color: #fff; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .sol:hover, .lc:hover, .bd:hover, .btn:hover, .cta-top:hover { transform: none; }
+  /* Collapsing the duration above would leave every slide parked on its last
+     keyframe — all four opaque, so the band would settle on whichever is last
+     in the DOM at a 1.17 crop. Stop the animation outright instead and show
+     the first frame at its true framing: the hero someone who asked for less
+     motion gets is the hero this band had before the round existed. */
+  .hero-shot { animation: none !important; transform: none; }
+  .hero-media .hero-shot:not(:first-child) { opacity: 0; }
+}
+
+/* ===== Responsive =====
+   The reference's three steps — 1240 / 1100 / 700 — reused verbatim so a band
+   on this page and a band on the CyberShield page always reflow together.
+
+   1240: the six-item nav folds. The reference folds here because its lockup,
+   menu and actions need ~1180px side by side; ours carries the same six items
+   plus a language switcher, so it runs out of room at the same place. Folding
+   before the content grids do is deliberate: the bar is what would overflow. */
+@media (max-width: 1240px) {
+  nav.menu { display: none; }
+  .burger { display: block; }
+  .mobile-menu.open { display: block; }
+  .nav { gap: 14px; }
+  .cta-top { display: none; }
+  /* The icon stays — a basket a reader cannot see on a phone is a basket they
+     forget they filled — but the panel under it goes. There is no hover on
+     touch, so it would only ever open by accident on the way to somewhere
+     else, and the page it links to shows the same list with room to work in. */
+  .cart:hover .cart-peek, .cart:focus-within .cart-peek { display: none; }
+}
+
+/* 1100: two-column content collapses. */
+@media (max-width: 1100px) {
+  .sol-grid, .line-grid, .line-grid.three { grid-template-columns: 1fr 1fr; }
+  /* Two, not three: a download card's title runs to nine words on the longest
+     of them ("Immunity test to conducted common- and differential mode
+     disturbances") and needs the width more than the row needs the density. */
+  .dl-grid { grid-template-columns: 1fr 1fr; }
+  .trust { grid-template-columns: 1fr; gap: 55px; }
+  .foot { grid-template-columns: 1fr 1fr; }
+  /* The two check columns stay side by side here — each row is a short label,
+     so they fit long after the card grids stop fitting — but the gap loses the
+     6vw it only needed to separate two full prose columns. */
+  .check-cols { gap: 20px 40px; }
+  /* Same reasoning for the belief columns, which are two full prose columns
+     and lose the 6vw they only needed to keep them apart. */
+  .belief { gap: 20px 40px; }
+  /* Four values in a row need ~240px each for their four statements to stay
+     readable; below 1100 that is no longer there. */
+  .value-grid { grid-template-columns: 1fr 1fr; }
+  .badges-four { grid-template-columns: 1fr 1fr; }
+  /* The frame is narrower here, so the strip can be shorter and still leave the
+     same proportion of the room off-screen to scroll to. */
+  .pano-scroll img { height: 400px; }
+  /* The result card's picture column stops earning its 300px once the copy
+     beside it has to wrap mid-figure, so it goes back on top. */
+  .mc-card { grid-template-columns: 1fr; }
+  /* Full width now, so the 3:2 frame would be 700px of photograph over the
+     copy. Cropped to a band instead, the way the page head is. */
+  .mc-shot img { aspect-ratio: auto; height: 240px; }
+}
+
+/* 700: single column, and the generous 120px band rhythm drops to 85px — the
+   reference's own mobile value, with its 18px gutter. */
+@media (max-width: 700px) {
+  .nav { height: 66px; }
+  .brand-logo { height: 36px; }
+  .wrap { padding-inline: 18px; }
+  header .wrap, footer .wrap, .mobile-menu .wrap { padding-inline: 18px; }
+  section { padding: 85px 0; }
+  /* padding-block, not the `padding` shorthand this was written with. `.wrap`
+     and `.hero-in` are the same element, so a shorthand here also set
+     padding-inline: 0 and won on source order — the copy ran edge to edge on a
+     phone with no gutter at all, while every other band on the page kept its
+     18px. */
+  .hero-in { padding-block: 42px 50px; }
+  .page-head { padding: 60px 0 50px; }
+  .band { padding-block: 44px; padding-inline: 18px; }
+  .sec-head { margin-bottom: 45px; }
+  .sec-head h2, .trust h2 { font-size: 32px; }
+  .band h2 { font-size: 26px; }
+  .page-head h1 { font-size: 32px; }
+  .hero p { font-size: 17px; }
+  .btns { align-items: stretch; flex-direction: column; gap: 12px; }
+  .sol-grid, .line-grid, .line-grid.three, .line-grid.two { grid-template-columns: 1fr; }
+  /* Two on a phone, not one. These cards carry a picture whose only job is to
+     be recognised — fifteen full-width covers at 250px each is a screen of
+     scrolling per document, and paired they are still 160px wide, which is
+     wider than the thumbnail the head office prints on a desktop. The frame
+     comes down with them so a pair reads as one row. */
+  .dl-grid { grid-template-columns: 1fr 1fr; gap: 14px; }
+  .dl { padding: 14px 14px 18px; }
+  .dl-shot { height: 190px; margin-bottom: 14px; }
+  .dl h4 { font-size: 15px; }
+  .dl p { font-size: 13px; }
+  .badges, .badges-wide, .badges-four { grid-template-columns: 1fr; }
+  /* After the rule above, which it overrides at equal specificity. The landing
+     page's badges go single-column here because a headline metric at 24px
+     needs the width; the model pages' at-a-glance values are short enough to
+     pair, and six of them stacked is a screen and a half of scrolling for
+     something called a glance. 15px so the longest of them
+     (`2.0 mm galvanized steel`) still fits two lines in half a phone. */
+  .badges-compact { grid-template-columns: 1fr 1fr; }
+  .badges-compact .bd { padding: 11px 12px; }
+  .badges-compact .bd b { font-size: 15px; }
+  /* The band rhythm drops to 85px here, so the plate closing it follows. And
+     2.74:1 across an 18px-gutter frame is a 123px stripe — too short to read a
+     building in. Cropped to a band instead, the way `.mc-shot` is: the centre
+     56% of the aerial is the works itself, which is what the plate is for. */
+  .trust-shot { margin-top: 45px; }
+  .trust-shot img { height: 220px; object-fit: cover; }
+  .check-cols { grid-template-columns: 1fr; gap: 50px; }
+  /* Stacked, the two columns are read one after the other rather than against
+     each other, so the rules do the work the side-by-side layout was doing. */
+  .belief { grid-template-columns: 1fr; gap: 44px; }
+  .sub-head, .check-col h3 { font-size: 22px; }
+  .value-grid, .figure-row { grid-template-columns: 1fr; }
+  /* The table keeps its 620px measure and scrolls inside `.spec-wrap` rather
+     than reflowing: a dimension like "22,580 × 15,680 × 8,700 mm" cannot wrap
+     and stay readable, and a row split across two lines stops being a row.
+     Only the column gutter gives way. */
+  .spec-table th, .spec-table td { padding-right: 14px; }
+  /* 280px against an 18px-gutter frame still shows a third of the turn at once,
+     which is enough to read the room while dragging through it. */
+  .pano-scroll img { height: 280px; }
+  /* The index column is dead weight once the row is this narrow: the year or
+     number moves onto its own line above the heading. */
+  .entry { grid-template-columns: 1fr; gap: 4px; }
+  .entry p, .entry .entry-links { grid-column: 1; }
+  .foot { grid-template-columns: 1fr; }
+  .callout { padding: 34px 30px; }
+  .mc-opt-grid, .mc-fields { grid-template-columns: 1fr; }
+  /* Thirteen ticks across a phone is a 20px segment each; the gap goes and the
+     bar reads as one line with joints rather than as a dashed rule. And the
+     review's label column stacks over its answer — 220px of it would leave
+     nothing for the answer itself. */
+  .mcq-bar { gap: 2px; }
+  .mcq-review-btn { grid-template-columns: 1fr; gap: 4px; }
+  .mc-card-body { padding: 22px 20px 24px; }
+  .mc-card h3 { font-size: 22px; }
+  /* A 140px label column leaves nothing for a size like "19,205 × 12,080 ×
+     8,325 mm", so the figure moves under its label. */
+  .mc-spec > div { grid-template-columns: 1fr; gap: 4px; }
+  /* The row keeps its shape and scrolls sideways instead of wrapping: a
+     connector that breaks across two lines stops reading as one flow. 128px
+     is the narrowest a pill stays a word rather than an ellipsis. */
+  .mc-steps { overflow-x: auto; padding-bottom: 6px; }
+  .mc-step { flex: 0 0 128px; }
+  /* `.btns` is already column here, so the buttons stretch; the hint under
+     them should not. */
+  .mc-need { text-align: center; }
+  /* The cart line loses its third column: a designation and a descriptor need
+     the width more than the ✕ needs to be beside them, so the two controls go
+     under the copy on the tick's own axis. */
+  .cart-item { grid-template-columns: auto 1fr; gap: 6px 16px; }
+  .cart-item-acts { grid-column: 2; justify-content: space-between; margin-top: 6px; }
+  .cart-item-body h3 { font-size: 19px; }
+  .cart-bar-acts { margin-left: 0; }
+  /* The panel is 320px against an 18px-gutter frame — it would hang off the
+     left edge of a small phone. It is already hidden at 1240px; this is the
+     fallback for a browser that reaches it some other way. */
+  .cart-panel { width: min(320px, calc(100vw - 36px)); }
+  .hero-stats { flex-wrap: wrap; }
+  .hero-stats .st { flex: 1 1 100%; padding: 18px 0; border-right: 0; border-bottom: 1px solid var(--line); }
+  .hero-stats .st:last-child { border-bottom: 0; }
+}
