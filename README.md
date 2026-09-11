@@ -31,6 +31,8 @@ Tests build the static export, validate pages and links, and exercise the origin
 
 ## GitHub Pages
 
+GitHub Pages is a temporary development preview. The production destination after development is https://www.emc-frankonia.com. Legal pages are prepared for that production service. See [deployment notes](DEPLOYMENT-NOTES.md) for preview hosting privacy and migration checks.
+
 Repository: https://github.com/junhan95/Frankonia-Jiashan
 
 ```sh

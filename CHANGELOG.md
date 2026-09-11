@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.2 — 2026-09-11
+
+- Add supplied Jiashan registration and privacy contact information in Chinese and English.
+- Prepare legal notices for www.emc-frankonia.com, remove placeholder fields and clarify retention and rights procedures.
+- Document GitHub Pages as a development preview and record production migration checks.
+
 ## 0.1.1 — 2026-09-09
 
 - Replace German imprint and privacy text with Chinese and English notices for the Jiashan website.
